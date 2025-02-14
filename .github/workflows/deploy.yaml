@@ -46,4 +46,4 @@ jobs:
       - name: Deploy to GKE
         run: |
           kubectl apply -f backend-deployment.yaml
-          kubectl rollout restart deployment backend-deployment
+          kubectl rollout restart deployment backend
