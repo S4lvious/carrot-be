@@ -1,0 +1,53 @@
+package com.carrot.Carrot.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "clienti")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+public class Cliente {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
+    private String ragioneSociale;
+    
+    @Column(nullable = true)
+    private String nome;
+    
+    @Column(nullable = true)
+    private String cognome;
+    
+    private String email;
+    private String telefono;
+    
+    @Column(unique = true, nullable = true)
+    private String codiceFiscale;
+    
+    private String partitaIva;
+    
+    private String indirizzo;
+    private String citta;
+    private String provincia;
+    private String cap;
+    
+    @Lob
+    private String note;
+
+    private LocalDate dataUltimoOrdine;
+
+    @Transient
+    public boolean isAzienda() {
+        return ragioneSociale != null && !ragioneSociale.trim().isEmpty();
+    }
+}
