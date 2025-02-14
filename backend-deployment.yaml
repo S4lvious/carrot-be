@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: s4lvious/carrot-backend:v4
+        env:
+        - name: DB_URL
+          value: "jdbc:mysql://mysql:3306/carrotpmi"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "password"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 8080        # Porta del Service esposta nel cluster
+      targetPort: 8080  # Deve essere uguale alla porta del container
+  type: ClusterIP  # Default, accessibile solo dentro il cluster

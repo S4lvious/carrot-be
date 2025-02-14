@@ -1,0 +1,49 @@
+name: Deploy Backend to GKE
+
+on:
+  push:
+    branches:
+      - main  # Il deploy avviene quando pushi su main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials autopilot-cluster-1 --region europe-west9 --project promising-cairn-450815-a4
+
+      - name: Build and push Docker image
+        run: |
+          # Costruisce l'immagine usando il commit SHA come tag
+          docker build -t s4lvious/carrot-backend:${{ github.sha }} .
+          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+          docker push s4lvious/carrot-backend:${{ github.sha }}
+
+      - name: Install GKE auth plugin
+        run: |
+          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
+          echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+          echo "USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
+
+      - name: Update deployment file with image tag
+        run: |
+          # Sostituisce nel file backend-deployment.yaml il tag "latest" con il commit SHA
+          sed -i "s|s4lvious/carrot-backend:latest|s4lvious/carrot-backend:${{ github.sha }}|g" backend-deployment.yaml
+          cat backend-deployment.yaml  # Verifica la sostituzione
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f backend-deployment.yaml
+          kubectl rollout restart deployment backend-deployment
