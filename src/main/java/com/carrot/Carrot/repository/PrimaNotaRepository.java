@@ -2,6 +2,9 @@ package com.carrot.Carrot.repository;
 
 import com.carrot.Carrot.enumerator.TipoMovimento;
 import com.carrot.Carrot.model.PrimaNota;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +26,7 @@ public interface PrimaNotaRepository extends JpaRepository<PrimaNota, Long> {
     // ✅ Ottenere solo le entrate o le uscite in un periodo specifico
     List<PrimaNota> findByUserIdAndTipoMovimentoAndDataOperazioneBetween(Long userId, TipoMovimento tipoMovimento, LocalDate startDate, LocalDate endDate);
 
-    // ✅ Eliminare operazione dell'utente autenticato
+    @Transactional
     void deleteByIdAndUserId(Long id, Long userId);
 
     // ✅ Ottenere operazione specifica di un utente

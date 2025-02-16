@@ -7,6 +7,9 @@ import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.DettaglioOrdineRepository;
 import com.carrot.Carrot.repository.PrimaNotaRepository;
 import com.carrot.Carrot.security.MyUserDetails;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -68,6 +71,7 @@ public class PrimaNotaService {
     }
 
     // Eliminare un'operazione
+    @Transactional
     public void deletePrimaNota(Long id) {
         primaNotaRepository.deleteByIdAndUserId(id, getCurrentUser().getId());
     }
