@@ -6,7 +6,10 @@ import com.carrot.Carrot.enumerator.TipoMovimento;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -52,5 +55,23 @@ public class PrimaNotaController {
     public ResponseEntity<Void> deletePrimaNota(@PathVariable Long id) {
         primaNotaService.deletePrimaNota(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ✅ Ottenere il totale di entrate e uscite per i grafici
+    @GetMapping("/dashboard/totali")
+    public ResponseEntity<Map<String, BigDecimal>> getTotaleEntrateUscite() {
+        return ResponseEntity.ok(primaNotaService.getTotaleEntrateUscite());
+    }
+
+    // ✅ Ottenere il saldo mensile per i grafici
+    @GetMapping("/dashboard/saldo")
+    public ResponseEntity<List<Map<String, Object>>> getSaldoMensile(@RequestParam(defaultValue = "6") int mesi) {
+        return ResponseEntity.ok(primaNotaService.getSaldoMensile(mesi));
+    }
+
+    // ✅ Ottenere la distribuzione delle categorie per tipo (ENTRATA o USCITA)
+    @GetMapping("/dashboard/categorie")
+    public ResponseEntity<Map<String, BigDecimal>> getDistribuzioneCategorie(@RequestParam TipoMovimento tipoMovimento) {
+        return ResponseEntity.ok(primaNotaService.getDistribuzioneCategorie(tipoMovimento));
     }
 }

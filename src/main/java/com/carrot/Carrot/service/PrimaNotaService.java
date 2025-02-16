@@ -8,10 +8,10 @@ import com.carrot.Carrot.security.MyUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PrimaNotaService {
@@ -64,5 +64,58 @@ public class PrimaNotaService {
     // Eliminare un'operazione
     public void deletePrimaNota(Long id) {
         primaNotaRepository.deleteByIdAndUserId(id, getCurrentUser().getId());
+    }
+
+    // Ottenere il totale di entrate e uscite
+    public Map<String, BigDecimal> getTotaleEntrateUscite() {
+        List<PrimaNota> operazioni = primaNotaRepository.findByUserId(getCurrentUser().getId());
+        BigDecimal entrate = operazioni.stream()
+                .filter(p -> p.getTipoMovimento() == TipoMovimento.ENTRATA)
+                .map(PrimaNota::getImporto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal uscite = operazioni.stream()
+                .filter(p -> p.getTipoMovimento() == TipoMovimento.USCITA)
+                .map(PrimaNota::getImporto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Map<String, BigDecimal> result = new HashMap<>();
+        result.put("entrate", entrate);
+        result.put("uscite", uscite);
+        return result;
+    }
+
+    // Ottenere il saldo mensile
+    public List<Map<String, Object>> getSaldoMensile(int mesi) {
+        List<Map<String, Object>> saldoMensile = new ArrayList<>();
+        LocalDate oggi = LocalDate.now();
+
+        for (int i = 0; i < mesi; i++) {
+            LocalDate start = oggi.minusMonths(i).withDayOfMonth(1);
+            LocalDate end = start.plusMonths(1).minusDays(1);
+
+            BigDecimal entrate = primaNotaRepository.findByUserIdAndTipoMovimentoAndDataOperazioneBetween(getCurrentUser().getId(), TipoMovimento.ENTRATA, start, end)
+                    .stream().map(PrimaNota::getImporto).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal uscite = primaNotaRepository.findByUserIdAndTipoMovimentoAndDataOperazioneBetween(getCurrentUser().getId(), TipoMovimento.USCITA, start, end)
+                    .stream().map(PrimaNota::getImporto).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            Map<String, Object> meseData = new HashMap<>();
+            meseData.put("mese", start.getMonth().toString());
+            meseData.put("entrate", entrate);
+            meseData.put("uscite", uscite);
+            meseData.put("saldo", entrate.subtract(uscite));
+
+            saldoMensile.add(meseData);
+        }
+        return saldoMensile;
+    }
+
+    // Ottenere la distribuzione delle categorie
+    public Map<String, BigDecimal> getDistribuzioneCategorie(TipoMovimento tipoMovimento) {
+        List<PrimaNota> operazioni = primaNotaRepository.findByUserIdAndTipoMovimento(getCurrentUser().getId(), tipoMovimento);
+        return operazioni.stream()
+                .collect(Collectors.groupingBy(p -> p.getCategoria().getNome(),
+                        Collectors.reducing(BigDecimal.ZERO, PrimaNota::getImporto, BigDecimal::add)));
     }
 }
