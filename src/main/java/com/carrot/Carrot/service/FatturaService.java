@@ -180,12 +180,19 @@ public class FatturaService {
 
         if (inserisciMovimento) {
             PrimaNota primaNota = new PrimaNota();
-            primaNota.setCategoria(fattura.getOrdine().getDettagliOrdine().getFirst().getProdotto().getCategoria());
+            if (!fattura.getOrdine().getDettagliOrdine().isEmpty()) {
+                primaNota.setCategoria(fattura.getOrdine().getDettagliOrdine().get(0).getProdotto().getCategoria());
+            }
+            
+            // Controlla se esiste almeno un metodo di pagamento associato all'utente
+            List<MetodoPagamento> metodiPagamento = metodoPagamentoRepository.findByUserId(currentUser.getId());
+            if (!metodiPagamento.isEmpty()) {
+                primaNota.setMetodoPagamento(metodiPagamento.get(0));
+            }
             primaNota.setDataOperazione(fattura.getDataEmissione());
             primaNota.setFattura(fattura);
             primaNota.setImporto(totaleDovuto);
             primaNota.setIncaricoId(fattura.getOrdine().getId());
-            primaNota.setMetodoPagamento(metodoPagamentoRepository.findByUserId(currentUser.getId()).getFirst());
             primaNota.setNome(fattura.getNumeroFattura());
             primaNota.setTipoMovimento(TipoMovimento.ENTRATA);
             primaNota.setUser(currentUser);
