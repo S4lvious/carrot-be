@@ -96,7 +96,7 @@ public class Fattura {
     @Column(name = "provincia_cliente", nullable = false)
     private String provinciaCliente;
 
-    @Column(name = "partita_iva_cliente", nullable = true)
+    @Column(name = "partita_iva_cliente")
     private String partitaIVACliente;
 
     @Column(name = "codice_fiscale_cliente")
