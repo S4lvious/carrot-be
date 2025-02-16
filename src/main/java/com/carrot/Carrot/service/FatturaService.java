@@ -5,6 +5,7 @@ import com.carrot.Carrot.model.*;
 import com.carrot.Carrot.repository.FatturaRepository;
 import com.carrot.Carrot.repository.MetodoPagamentoRepository;
 import com.carrot.Carrot.repository.OrdineRepository;
+import com.carrot.Carrot.repository.PrimaNotaRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 import com.carrot.Carrot.repository.OperazioneRepository;
 import com.itextpdf.kernel.font.PdfFont;
@@ -44,6 +45,9 @@ public class FatturaService {
 
     @Autowired
     private OperazioneRepository operazioneRepository;
+
+    @Autowired
+    private PrimaNotaRepository primaNotaRepository;
 
     @Autowired
     private MetodoPagamentoRepository metodoPagamentoRepository;
@@ -185,6 +189,7 @@ public class FatturaService {
             primaNota.setNome(fattura.getNumeroFattura());
             primaNota.setTipoMovimento(TipoMovimento.ENTRATA);
             primaNota.setUser(currentUser);
+            primaNotaRepository.save(primaNota);
         }
     }
 
