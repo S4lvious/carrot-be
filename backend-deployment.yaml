@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: s4lvious/carrot-backend:v4
+        image: s4lvious/carrot-backend:latest
         env:
         - name: DB_URL
           value: "jdbc:mysql://mysql:3306/carrotpmi"
