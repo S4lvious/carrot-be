@@ -78,6 +78,6 @@ public class PrimaNotaController {
     @GetMapping("/dashboard/prodotti")
     public ResponseEntity<Map<String, BigDecimal>> getProdottiPiuCostosiInUscite() {
         return ResponseEntity.ok(primaNotaService.getProdottiPiuCostosiInUscite());
-    }
+    }    
 
 }

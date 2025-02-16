@@ -20,6 +20,7 @@ public class PrimaNotaService {
 
     @Autowired
     private PrimaNotaRepository primaNotaRepository;
+    @Autowired
     private DettaglioOrdineRepository dettaglioOrdineRepository;
 
 
@@ -146,6 +147,6 @@ public class PrimaNotaService {
         }
 
         return prodottiTotali;
-    }
+    }    
 
 }
