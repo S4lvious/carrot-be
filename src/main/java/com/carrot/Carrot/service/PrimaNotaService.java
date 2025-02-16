@@ -125,28 +125,41 @@ public class PrimaNotaService {
     }
 
         public Map<String, BigDecimal> getProdottiPiuCostosiInUscite() {
-        List<PrimaNota> uscite = primaNotaRepository.findByUserIdAndTipoMovimento(getCurrentUser().getId(), TipoMovimento.USCITA);
-        Map<Long, BigDecimal> uscitePerOrdine = new HashMap<>();
+            Long userId = getCurrentUser().getId();
 
-        // Raggruppa le uscite per incarico (ordine)
-        for (PrimaNota uscita : uscite) {
-            if (uscita.getIncaricoId() != null) {
-                uscitePerOrdine.put(uscita.getIncaricoId(), uscitePerOrdine.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto()));
+            // Recupera tutte le uscite dell'utente autenticato
+            List<PrimaNota> uscite = primaNotaRepository.findByUserIdAndTipoMovimento(userId, TipoMovimento.USCITA);
+            
+            // Mappa per sommare le uscite per ciascun incarico (ordine)
+            Map<Long, BigDecimal> uscitePerIncarico = new HashMap<>();
+        
+            for (PrimaNota uscita : uscite) {
+                if (uscita.getIncaricoId() != null) {
+                    uscitePerIncarico.put(
+                        uscita.getIncaricoId(),
+                        uscitePerIncarico.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto())
+                    );
+                }
             }
-        }
-
-        // Recupera tutti i dettagli ordine relativi agli incarichi con uscite
-        List<DettaglioOrdine> dettagliOrdini = dettaglioOrdineRepository.findByOrdineIdIn(uscitePerOrdine.keySet());
-        Map<String, BigDecimal> prodottiTotali = new HashMap<>();
-
-        // Raggruppa il totale delle uscite per prodotto
-        for (DettaglioOrdine dettaglio : dettagliOrdini) {
-            String nomeProdotto = dettaglio.getProdotto().getNome();
-            BigDecimal totaleProdotto = dettaglio.getPrezzoUnitario().multiply(BigDecimal.valueOf(dettaglio.getQuantita()));
-            prodottiTotali.put(nomeProdotto, prodottiTotali.getOrDefault(nomeProdotto, BigDecimal.ZERO).add(totaleProdotto));
-        }
-
-        return prodottiTotali;
-    }    
+        
+            // Recupera i dettagli degli ordini associati a quegli incarichi
+            List<DettaglioOrdine> dettagliOrdini = dettaglioOrdineRepository.findByOrdineIdIn(uscitePerIncarico.keySet());
+        
+            // Mappa per raccogliere il totale delle uscite generate da ciascun prodotto
+            Map<String, BigDecimal> prodottiConPiuUscite = new HashMap<>();
+        
+            for (DettaglioOrdine dettaglio : dettagliOrdini) {
+                String nomeProdotto = dettaglio.getProdotto().getNome();
+                BigDecimal totaleUscitePerIncarico = uscitePerIncarico.getOrDefault(dettaglio.getOrdine().getId(), BigDecimal.ZERO);
+                
+                // Somma il totale delle uscite relative a quell'incarico ai prodotti coinvolti
+                prodottiConPiuUscite.put(
+                    nomeProdotto,
+                    prodottiConPiuUscite.getOrDefault(nomeProdotto, BigDecimal.ZERO).add(totaleUscitePerIncarico)
+                );
+            }
+        
+            return prodottiConPiuUscite;
+            }    
 
 }
