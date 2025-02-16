@@ -5,13 +5,13 @@ import com.carrot.Carrot.model.PrimaNota;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PrimaNotaRepository extends JpaRepository<PrimaNota, Long> {
-    // ✅ Ottenere tutte le operazioni di un utente
+    // ✅ Ottenere tutte le operazioni dell'utente autenticato
     List<PrimaNota> findByUserId(Long userId);
 
     // ✅ Filtrare per tipo di movimento (ENTRATA o USCITA)
@@ -23,6 +23,9 @@ public interface PrimaNotaRepository extends JpaRepository<PrimaNota, Long> {
     // ✅ Ottenere solo le entrate o le uscite in un periodo specifico
     List<PrimaNota> findByUserIdAndTipoMovimentoAndDataOperazioneBetween(Long userId, TipoMovimento tipoMovimento, LocalDate startDate, LocalDate endDate);
 
-    // ✅ Ottenere il totale delle entrate o uscite in un periodo specifico
-    BigDecimal sumImportoByUserIdAndTipoMovimentoAndDataOperazioneBetween(Long userId, TipoMovimento tipoMovimento, LocalDate startDate, LocalDate endDate);
+    // ✅ Eliminare operazione dell'utente autenticato
+    void deleteByIdAndUserId(Long id, Long userId);
+
+    // ✅ Ottenere operazione specifica di un utente
+    Optional<PrimaNota> findByIdAndUserId(Long id, Long userId);
 }
