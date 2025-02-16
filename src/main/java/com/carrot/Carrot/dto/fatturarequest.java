@@ -12,10 +12,20 @@ public class fatturarequest {
     private BigDecimal ritenutaAcconto;
     private LocalDate scadenza;
     private String stato;
+    private boolean inserisciMovimento;
 
     // Costruttore vuoto (necessario per la deserializzazione)
     public fatturarequest() {
     }
+
+
+    public boolean getInserisciMovimento() {
+        return inserisciMovimento;
+    }
+    public void setInserisciMovimento (boolean inserisciMovimento) {
+        this.inserisciMovimento = inserisciMovimento;
+    }
+
 
     // Getters e Setters
     public Ordine getOrdine() {

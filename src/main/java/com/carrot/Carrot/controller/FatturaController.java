@@ -27,7 +27,7 @@ public class FatturaController {
     @PostMapping("/genera")
     public ResponseEntity<?> generaFattura(@RequestBody fatturarequest fatturarequest) {
         try {
-            fatturaService.generaFattura(fatturarequest.getOrdine(), fatturarequest.isApplicareRitenuta(), fatturarequest.getRitenutaAcconto(), fatturarequest.getScadenza(), fatturarequest.getStato());
+            fatturaService.generaFattura(fatturarequest.getOrdine(), fatturarequest.getInserisciMovimento(),fatturarequest.isApplicareRitenuta(), fatturarequest.getRitenutaAcconto(), fatturarequest.getScadenza(), fatturarequest.getStato());
             return ResponseEntity.ok(fatturaService.getAllFatture());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Errore nella generazione della fattura: " + e.getMessage());
