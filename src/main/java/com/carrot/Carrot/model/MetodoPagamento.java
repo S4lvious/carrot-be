@@ -16,4 +16,7 @@ public class MetodoPagamento {
     @Column(nullable = false, unique = true)
     private String nome;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
