@@ -1,7 +1,9 @@
 package com.carrot.Carrot.service;
 
+import com.carrot.Carrot.enumerator.TipoMovimento;
 import com.carrot.Carrot.model.*;
 import com.carrot.Carrot.repository.FatturaRepository;
+import com.carrot.Carrot.repository.MetodoPagamentoRepository;
 import com.carrot.Carrot.repository.OrdineRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 import com.carrot.Carrot.repository.OperazioneRepository;
@@ -43,6 +45,10 @@ public class FatturaService {
     @Autowired
     private OperazioneRepository operazioneRepository;
 
+    @Autowired
+    private MetodoPagamentoRepository metodoPagamentoRepository;
+
+
     // Metodo di supporto per ottenere l'utente corrente
     private User getCurrentUser() {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder
@@ -52,7 +58,7 @@ public class FatturaService {
         return userDetails.getUser();
     }
 
-    public void generaFattura(Ordine incarico, boolean applicareRitenuta, BigDecimal ritenutaAcconto, LocalDate scadenza, String stato) {
+    public void generaFattura(Ordine incarico, boolean inserisciMovimento ,boolean applicareRitenuta, BigDecimal ritenutaAcconto, LocalDate scadenza, String stato) {
         User currentUser = getCurrentUser();
 
         // Verifica che l'ordine appartenga all'utente corrente (opzionale, se l'ordine è anch'esso tenantizzato)
@@ -166,6 +172,20 @@ public class FatturaService {
         operazione.setDescrizione("Nuova fattura creata: " + fattura.getNumeroFattura() + " per l'ordine " + incarico.getId());
         operazione.setDataOperazione(LocalDateTime.now());
         operazioneRepository.save(operazione);
+
+
+        if (inserisciMovimento) {
+            PrimaNota primaNota = new PrimaNota();
+            primaNota.setCategoria(fattura.getOrdine().getDettagliOrdine().getFirst().getProdotto().getCategoria());
+            primaNota.setDataOperazione(fattura.getDataEmissione());
+            primaNota.setFattura(fattura);
+            primaNota.setImporto(totaleDovuto);
+            primaNota.setIncaricoId(fattura.getOrdine().getId());
+            primaNota.setMetodoPagamento(metodoPagamentoRepository.findByUserId(currentUser.getId()).getFirst());
+            primaNota.setNome(fattura.getNumeroFattura());
+            primaNota.setTipoMovimento(TipoMovimento.ENTRATA);
+            primaNota.setUser(currentUser);
+        }
     }
 
     public List<Fattura> getAllFatture() {
