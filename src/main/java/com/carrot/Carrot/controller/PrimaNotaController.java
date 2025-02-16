@@ -80,4 +80,10 @@ public class PrimaNotaController {
         return ResponseEntity.ok(primaNotaService.getProdottiPiuCostosiInUscite());
     }    
 
+    @GetMapping("/dashboard/prodotti-rapporto-entrate-uscite")
+    public ResponseEntity<Map<String, BigDecimal>> getProdottiConRapportoEntrateUscite() {
+    return ResponseEntity.ok(primaNotaService.getProdottiConRapportoEntrateUscite());
+    }
+
+
 }

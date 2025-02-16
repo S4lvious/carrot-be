@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -160,6 +161,72 @@ public class PrimaNotaService {
             }
         
             return prodottiConPiuUscite;
-            }    
+            }  
+            
+            public Map<String, BigDecimal> getProdottiConRapportoEntrateUscite() {
+            Long userId = getCurrentUser().getId();
+
+            // Recupera tutte le entrate e uscite dell'utente
+            List<PrimaNota> entrate = primaNotaRepository.findByUserIdAndTipoMovimento(userId, TipoMovimento.ENTRATA);
+            List<PrimaNota> uscite = primaNotaRepository.findByUserIdAndTipoMovimento(userId, TipoMovimento.USCITA);
+
+            // Mappa per sommare entrate e uscite per incarico (ordine)
+            Map<Long, BigDecimal> totaleEntratePerIncarico = new HashMap<>();
+            Map<Long, BigDecimal> totaleUscitePerIncarico = new HashMap<>();
+
+            for (PrimaNota entrata : entrate) {
+                if (entrata.getIncaricoId() != null) {
+                    totaleEntratePerIncarico.put(
+                        entrata.getIncaricoId(),
+                        totaleEntratePerIncarico.getOrDefault(entrata.getIncaricoId(), BigDecimal.ZERO).add(entrata.getImporto())
+                    );
+                }
+            }
+
+            for (PrimaNota uscita : uscite) {
+                if (uscita.getIncaricoId() != null) {
+                    totaleUscitePerIncarico.put(
+                        uscita.getIncaricoId(),
+                        totaleUscitePerIncarico.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto())
+                    );
+                }
+            }
+
+            // Recupera i dettagli degli ordini associati
+            List<DettaglioOrdine> dettagliOrdini = dettaglioOrdineRepository.findByOrdineIdIn(totaleEntratePerIncarico.keySet());
+
+            // Mappa per raccogliere il rapporto Entrate/Uscite per ogni prodotto
+            Map<String, BigDecimal> rapportoProdotti = new HashMap<>();
+
+            for (DettaglioOrdine dettaglio : dettagliOrdini) {
+                Long incaricoId = dettaglio.getOrdine().getId();
+                String nomeProdotto = dettaglio.getProdotto().getNome();
+
+                BigDecimal totaleEntrate = totaleEntratePerIncarico.getOrDefault(incaricoId, BigDecimal.ZERO);
+                BigDecimal totaleUscite = totaleUscitePerIncarico.getOrDefault(incaricoId, BigDecimal.ZERO);
+
+                if (totaleUscite.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal rapporto = totaleEntrate.divide(totaleUscite, 2, RoundingMode.HALF_UP);
+                    rapportoProdotti.put(
+                        nomeProdotto,
+                        rapportoProdotti.getOrDefault(nomeProdotto, BigDecimal.ZERO).add(rapporto)
+                    );
+                }
+            }
+
+            // Ordina in ordine decrescente
+            return rapportoProdotti.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (e1, e2) -> e1,
+                            LinkedHashMap::new
+                    ));
+        }
+
+
+            
 
 }
