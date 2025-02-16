@@ -74,4 +74,10 @@ public class PrimaNotaController {
     public ResponseEntity<Map<String, BigDecimal>> getDistribuzioneCategorie(@RequestParam TipoMovimento tipoMovimento) {
         return ResponseEntity.ok(primaNotaService.getDistribuzioneCategorie(tipoMovimento));
     }
+
+    @GetMapping("/dashboard/prodotti")
+    public ResponseEntity<Map<String, BigDecimal>> getProdottiPiuCostosiInUscite() {
+        return ResponseEntity.ok(primaNotaService.getProdottiPiuCostosiInUscite());
+    }
+
 }

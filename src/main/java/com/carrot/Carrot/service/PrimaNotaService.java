@@ -1,8 +1,10 @@
 package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.enumerator.TipoMovimento;
+import com.carrot.Carrot.model.DettaglioOrdine;
 import com.carrot.Carrot.model.PrimaNota;
 import com.carrot.Carrot.model.User;
+import com.carrot.Carrot.repository.DettaglioOrdineRepository;
 import com.carrot.Carrot.repository.PrimaNotaRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,8 @@ public class PrimaNotaService {
 
     @Autowired
     private PrimaNotaRepository primaNotaRepository;
+    private DettaglioOrdineRepository dettaglioOrdineRepository;
+
 
     // Metodo per ottenere l'utente autenticato
     private User getCurrentUser() {
@@ -118,4 +122,30 @@ public class PrimaNotaService {
                 .collect(Collectors.groupingBy(p -> p.getCategoria().getNome(),
                         Collectors.reducing(BigDecimal.ZERO, PrimaNota::getImporto, BigDecimal::add)));
     }
+
+        public Map<String, BigDecimal> getProdottiPiuCostosiInUscite() {
+        List<PrimaNota> uscite = primaNotaRepository.findByUserIdAndTipoMovimento(getCurrentUser().getId(), TipoMovimento.USCITA);
+        Map<Long, BigDecimal> uscitePerOrdine = new HashMap<>();
+
+        // Raggruppa le uscite per incarico (ordine)
+        for (PrimaNota uscita : uscite) {
+            if (uscita.getIncaricoId() != null) {
+                uscitePerOrdine.put(uscita.getIncaricoId(), uscitePerOrdine.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto()));
+            }
+        }
+
+        // Recupera tutti i dettagli ordine relativi agli incarichi con uscite
+        List<DettaglioOrdine> dettagliOrdini = dettaglioOrdineRepository.findByOrdineIdIn(uscitePerOrdine.keySet());
+        Map<String, BigDecimal> prodottiTotali = new HashMap<>();
+
+        // Raggruppa il totale delle uscite per prodotto
+        for (DettaglioOrdine dettaglio : dettagliOrdini) {
+            String nomeProdotto = dettaglio.getProdotto().getNome();
+            BigDecimal totaleProdotto = dettaglio.getPrezzoUnitario().multiply(BigDecimal.valueOf(dettaglio.getQuantita()));
+            prodottiTotali.put(nomeProdotto, prodottiTotali.getOrDefault(nomeProdotto, BigDecimal.ZERO).add(totaleProdotto));
+        }
+
+        return prodottiTotali;
+    }
+
 }
