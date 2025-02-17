@@ -19,17 +19,17 @@ public class PlanInitializer implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) {
-        List<Plan> plans = Arrays.asList( // Usa Arrays.asList() per evitare errori con List.of()
-        new Plan("Mensile", 30, 9.99),
-        new Plan("Trimestrale", 90, 24.99),
-        new Plan("Annuale", 365, 89.99)
+public void run(String... args) {
+    List<Plan> plans = Arrays.asList(
+        new Plan(UUID.randomUUID(), "Mensile", 30, 9.99, 0),
+        new Plan(UUID.randomUUID(), "Trimestrale", 90, 24.99, 0),
+        new Plan(UUID.randomUUID(), "Annuale", 365, 89.99, 0)
     );
-    
-        for (Plan plan : plans) {
-            if (!planRepository.existsById(plan.getId())) {
-                planRepository.save(plan);
-            }
+
+    for (Plan plan : plans) {
+        if (!planRepository.existsByName(plan.getName())) { // Controlla in base al nome invece che all'ID
+            planRepository.save(plan);
         }
     }
+}
 }

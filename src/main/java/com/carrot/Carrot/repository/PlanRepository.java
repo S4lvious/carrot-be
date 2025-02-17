@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface PlanRepository extends JpaRepository<Plan, UUID> {
     Optional<Plan> findByName(String name);
+    boolean existsByName(String name);
+
 }
