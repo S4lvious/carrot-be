@@ -3,37 +3,45 @@ package com.carrot.Carrot.service;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.model.VerificationToken;
 import com.carrot.Carrot.repository.VerificationTokenRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class VerificationTokenService {
 
     private final VerificationTokenRepository tokenRepository;
+    private final EntityManager entityManager;
 
-    public VerificationTokenService(VerificationTokenRepository tokenRepository) {
+    public VerificationTokenService(VerificationTokenRepository tokenRepository, EntityManager entityManager) {
         this.tokenRepository = tokenRepository;
+        this.entityManager = entityManager;
     }
-
+    @Transactional
     public String generateVerificationToken(User user) {
-        // Cancella eventuali vecchi token dell'utente
-        tokenRepository.deleteByUserId(user.getId());
-
-        // Genera un nuovo token
-        String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(
-                UUID.randomUUID(),
+        Optional<VerificationToken> optionalToken = tokenRepository.findByUserId(user.getId());
+        VerificationToken verificationToken;
+        if (optionalToken.isPresent()) {
+            verificationToken = optionalToken.get();
+            verificationToken.setToken(UUID.randomUUID().toString());
+            verificationToken.setExpiresAt(LocalDateTime.now().plusHours(24));
+        } else {
+            verificationToken = new VerificationToken(
+                UUID.randomUUID().toString(),
                 user,
-                token,
-                LocalDateTime.now().plusHours(24) // Valido per 24 ore
-        );
-        tokenRepository.save(verificationToken);
-
-        return token;
+                UUID.randomUUID().toString(),
+                LocalDateTime.now().plusHours(24)
+            );
+        }
+        return tokenRepository.save(verificationToken).getToken();
     }
-
+    
     public VerificationToken validateToken(String token) {
         return tokenRepository.findByToken(token)
                 .filter(vt -> vt.getExpiresAt().isAfter(LocalDateTime.now()))

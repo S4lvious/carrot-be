@@ -15,7 +15,7 @@ public class PaymentService {
 
     public String createCheckoutSession(Long userId, String planName, double price) {
         Stripe.apiKey = stripeSecretKey;
-
+    
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION) // Modalità abbonamento
                 .setSuccessUrl("https://app.powerwebsoftware.it/success?session_id={CHECKOUT_SESSION_ID}")
@@ -24,6 +24,11 @@ public class PaymentService {
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                 .setCurrency("eur")
                                 .setUnitAmount((long) (price * 100)) // Convertito in centesimi
+                                .setRecurring( // 🔥 Indicare che il prezzo è ricorrente
+                                    SessionCreateParams.LineItem.PriceData.Recurring.builder()
+                                        .setInterval(SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH) // Può essere MONTH o YEAR
+                                        .build()
+                                )
                                 .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                         .setName(planName)
                                         .build())
@@ -31,7 +36,7 @@ public class PaymentService {
                         .setQuantity(1L)
                         .build())
                 .build();
-
+    
         try {
             Session session = Session.create(params);
             return session.getUrl();
@@ -39,4 +44,4 @@ public class PaymentService {
             throw new RuntimeException("Errore nella creazione della sessione di pagamento", e);
         }
     }
-}
+    }

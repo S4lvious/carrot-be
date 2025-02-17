@@ -17,11 +17,7 @@ import org.hibernate.type.SqlTypes;
 public class VerificationToken {
 
     @Id
-        @JdbcTypeCode(SqlTypes.BINARY) // CORRETTO PER HIBERNATE 6+
-    @Column(columnDefinition = "BINARY(16)")
-
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)

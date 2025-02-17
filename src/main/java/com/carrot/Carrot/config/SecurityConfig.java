@@ -36,6 +36,9 @@ public class SecurityConfig {
                 // Consenti le richieste OPTIONS a tutti
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/stripe-webhook").permitAll()
+                .requestMatchers("/stripe-webhook/**").permitAll()
+
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults());

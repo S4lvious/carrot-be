@@ -14,12 +14,9 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Plan {
-
     @Id
-    @GeneratedValue
-    @JdbcTypeCode(SqlTypes.BINARY) // Gestisce UUID come BINARY(16) in MySQL
-    @Column(columnDefinition = "BINARY(16)")
-    private UUID id;
+    private String id;
+
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -31,7 +28,7 @@ public class Plan {
     private double price;
 
     public Plan(String name, int durationDays, double price) {
-        this.id = UUID.randomUUID();
+        this.id = UUID.randomUUID().toString();
         this.name = name;
         this.durationDays = durationDays;
         this.price = price;
