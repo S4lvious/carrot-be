@@ -24,12 +24,12 @@ public class PaymentController {
 
     @PostMapping("/checkout")
     public ResponseEntity<String> createCheckoutSession(@RequestParam Long userId, 
-                                                          @RequestParam String planName, 
-                                                          @RequestParam double price) {
+                                                          @RequestParam String planName) {
         var planOptional = planRepository.findByName(planName);
         if (planOptional.isPresent()) {
             String planId = planOptional.get().getId();
             subscriptionService.pendingSubscription(userId, planId);
+            Double price = planOptional.get().getPrice();
             String url = paymentService.createCheckoutSession(userId, planName, price);
             return ResponseEntity.ok(url);           
         } else {

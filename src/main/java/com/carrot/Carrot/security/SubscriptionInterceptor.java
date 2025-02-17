@@ -3,11 +3,9 @@ package com.carrot.Carrot.security;
 import com.carrot.Carrot.model.Subscription;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.service.SubscriptionService;
-
+import com.carrot.Carrot.repository.SubscriptionRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import com.carrot.Carrot.repository.SubscriptionRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,11 +25,16 @@ public class SubscriptionInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request,
+                             @NonNull HttpServletResponse response,
+                             @NonNull Object handler) throws Exception {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof UserDetails) {
-            User user = (User) principal;
+            // Cast a MyUserDetails invece di User
+            MyUserDetails userDetails = (MyUserDetails) principal;
+            // Supponendo che MyUserDetails contenga il modello User, per esempio:
+            User user = userDetails.getUser();
 
             // Verifica se l'utente ha un abbonamento attivo o è ancora in prova
             Optional<Subscription> subscriptionOpt = subscriptionRepository.findByUserId(user.getId());
@@ -40,14 +43,13 @@ public class SubscriptionInterceptor implements HandlerInterceptor {
                 Subscription subscription = subscriptionOpt.get();
                 LocalDateTime now = LocalDateTime.now();
 
-                // Se l'utente è ancora in prova o ha un abbonamento attivo, può accedere
-                if ((subscription.isTrial() && subscription.getEndDate().isAfter(now)) || 
-                    (!subscription.isTrial() && subscription.getEndDate().isAfter(now))) {
+                if (subscription.getEndDate().isAfter(now)) {
+                    // L'utente ha un abbonamento valido
                     return true;
                 }
             }
 
-            // Se arriva qui, l'abbonamento è scaduto o non esiste
+            // Se l'abbonamento è scaduto o non esiste
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Il tuo abbonamento è scaduto. Rinnova per continuare.");
             return false;
         }

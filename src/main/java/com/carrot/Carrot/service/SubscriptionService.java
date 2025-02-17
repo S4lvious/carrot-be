@@ -125,6 +125,9 @@ public class SubscriptionService {
             // L'utente ha già un abbonamento, aggiorniamo la scadenza
             subscription = existingSubscription.get();
             subscription.setEndDate(subscription.getEndDate().plusDays(plan.getDurationDays()));
+            if (subscription.isTrial()) {
+                subscription.setTrial(false);
+            }
         } else {
             // Creiamo una nuova sottoscrizione
             subscription = new Subscription();
