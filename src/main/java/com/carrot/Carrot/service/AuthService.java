@@ -74,7 +74,8 @@ public class AuthService {
             subscriptionService.pendingSubscription(user.getId(), plan.getId());
         }
     }
-        public String verifyEmail(String token) {
+    
+    public String verifyEmail(String token) {
     VerificationToken verificationToken = tokenService.validateToken(token);
     User user = verificationToken.getUser();
 

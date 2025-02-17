@@ -43,5 +43,8 @@ public class MyUserDetails implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
-}
+    @Override
+    public boolean isEnabled() {
+        return user.isEnabled(); // Controlla se l'utente ha verificato l'email
+    }
+    }
