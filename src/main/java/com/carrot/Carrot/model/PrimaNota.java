@@ -53,9 +53,6 @@ public class PrimaNota {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Fattura fattura;  // Se è un'entrata legata a una fattura emessa
     
-    @ManyToOne
-    @JoinColumn(name = "ordine_id", nullable = true) // ✅ Usa @JoinColumn invece di @Column
-    @OnDelete(action = OnDeleteAction.SET_NULL)
-    private Ordine ordine;
-
+    @Column(name = "incarico_id", nullable = true)
+    private Long incaricoId;  // Se l’operazione
 }
