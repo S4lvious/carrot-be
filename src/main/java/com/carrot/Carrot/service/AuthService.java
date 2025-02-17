@@ -1,9 +1,11 @@
 package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.model.PendingSubscription;
+import com.carrot.Carrot.model.Plan;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.model.VerificationToken;
 import com.carrot.Carrot.repository.PendingSubscriptionRepository;
+import com.carrot.Carrot.repository.PlanRepository;
 import com.carrot.Carrot.repository.UserRepository;
 import jakarta.mail.MessagingException;
 
@@ -23,10 +25,11 @@ public class AuthService {
     private final SubscriptionService subscriptionService; // Aggiunto SubscriptionService
     private final PendingSubscriptionRepository pendingSubscriptionRepository;
     private final PaymentService paymentService;
+    private final PlanRepository planRepository;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
                        VerificationTokenService tokenService, EmailService emailService,
-                       SubscriptionService subscriptionService, PendingSubscriptionRepository pendingSubscriptionRepository, PaymentService paymentService) {
+                       SubscriptionService subscriptionService, PendingSubscriptionRepository pendingSubscriptionRepository, PaymentService paymentService, PlanRepository planRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -34,27 +37,44 @@ public class AuthService {
         this.subscriptionService = subscriptionService;
         this.pendingSubscriptionRepository = pendingSubscriptionRepository;
         this.paymentService = paymentService;
+        this.planRepository = planRepository;
+
     }
 
     public void registerUser(User user, String planId) throws MessagingException {
-        // Cripta la password
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setEnabled(false); // L'utente deve prima verificare l'email
-        userRepository.save(user);
-
-        // Generiamo il token di verifica
-        String token = tokenService.generateVerificationToken(user);
-
-        // Inviamo l'email di verifica
-        emailService.sendVerificationEmail(user.getEmail(), token);
-
-        // Se l'utente ha scelto un piano, salviamo l'ID del piano in attesa della verifica email
+        // ✅ Verifica se il planId è valido PRIMA di creare l'utente
+        Plan plan = null;
         if (planId != null) {
-            subscriptionService.pendingSubscription(user.getId(), planId);
+            plan = planRepository.findById(planId).orElse(null);
+            if (plan == null) {
+                throw new IllegalArgumentException("Piano non valido");
+            }
+        }
+    
+        // ✅ Assicuriamoci che enabled e trialActive siano settati correttamente
+        user.setEnabled(false); // Deve essere false fino alla verifica email
+        user.setTrialActive(false); // Il trial deve essere attivato dopo il pagamento
+    
+        // ✅ Cripta la password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    
+        // ✅ Salva l'utente
+        System.out.println("Prima del salvataggio: enabled=" + user.isEnabled() + ", trialActive=" + user.isTrialActive());
+        userRepository.save(user);
+        System.out.println("Dopo il salvataggio: enabled=" + userRepository.findById(user.getId()).get().isEnabled() + ", trialActive=" + userRepository.findById(user.getId()).get().isTrialActive());
+            
+        // ✅ Generiamo il token di verifica
+        String token = tokenService.generateVerificationToken(user);
+    
+        // ✅ Inviamo l'email di verifica
+        emailService.sendVerificationEmail(user.getEmail(), token);
+    
+        // ✅ Se il piano esiste, creiamo la pendingSubscription
+        if (plan != null) {
+            subscriptionService.pendingSubscription(user.getId(), plan.getId());
         }
     }
-
-public String verifyEmail(String token) {
+        public String verifyEmail(String token) {
     VerificationToken verificationToken = tokenService.validateToken(token);
     User user = verificationToken.getUser();
 
