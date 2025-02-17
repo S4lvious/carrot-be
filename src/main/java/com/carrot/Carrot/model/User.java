@@ -3,6 +3,8 @@ package com.carrot.Carrot.model;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -70,6 +72,7 @@ public class User {
     private Role role = Role.USER; // Ruolo dell'utente
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Subscription subscription; // Collega la sottoscrizione dell'utente
 
     @Column(nullable = false)
