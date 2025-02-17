@@ -14,9 +14,10 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Plan {
+
+
     @Id
     private String id;
-
 
     @Column(nullable = false, unique = true)
     private String name;

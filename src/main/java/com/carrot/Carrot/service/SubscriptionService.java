@@ -72,7 +72,7 @@ public class SubscriptionService {
     /**
      * Memorizza un piano scelto in attesa della conferma del pagamento
      */
-    public String pendingSubscription(Long userId, UUID planId) {
+    public String pendingSubscription(Long userId, String planId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID " + userId));
     
@@ -108,7 +108,7 @@ public class SubscriptionService {
     /**
      * Acquista un nuovo piano di abbonamento
      */
-    public void subscribeToPlan(Long userId, UUID planId) {
+    public void subscribeToPlan(Long userId, String planId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID " + userId));
 

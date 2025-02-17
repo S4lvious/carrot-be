@@ -36,7 +36,7 @@ public class AuthService {
         this.paymentService = paymentService;
     }
 
-    public void registerUser(User user, UUID planId) throws MessagingException {
+    public void registerUser(User user, String planId) throws MessagingException {
         // Cripta la password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setEnabled(false); // L'utente deve prima verificare l'email

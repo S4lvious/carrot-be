@@ -52,7 +52,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user, 
-                                               @RequestParam(required = false) UUID planId) 
+                                               @RequestParam(required = false) String planId) 
                                                throws MessagingException {
         authService.registerUser(user, planId);
         return ResponseEntity.ok("Registrazione completata! Controlla la tua email per verificare l'account.");
