@@ -23,7 +23,7 @@ public class Ordine {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)

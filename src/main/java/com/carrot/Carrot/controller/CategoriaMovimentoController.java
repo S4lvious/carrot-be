@@ -32,9 +32,8 @@ public class CategoriaMovimentoController {
      * Recupera tutte le categorie di un utente specifico.
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<List<CategoriaMovimento>> getCategorieByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<CategoriaMovimento>> getCategorieByUser() {
         User user = getCurrentUser();
-        user.setId(userId); // Creiamo un oggetto User con solo l'ID
         return ResponseEntity.ok(categoriaMovimentoService.getCategorieByUser(user));
     }
 
@@ -42,9 +41,8 @@ public class CategoriaMovimentoController {
      * Crea una nuova categoria.
      */
     @PostMapping("/{userId}")
-    public ResponseEntity<CategoriaMovimento> createCategoria(@PathVariable Long userId, @RequestBody CategoriaMovimento categoriaRequest) {
+    public ResponseEntity<CategoriaMovimento> createCategoriaMovimento(@RequestBody CategoriaMovimento categoriaRequest) {
         User user = getCurrentUser();
-        user.setId(userId);
         CategoriaMovimento categoria = categoriaMovimentoService.createCategoria(categoriaRequest.getNome(), user);
         return ResponseEntity.ok(categoria);
     }
@@ -53,7 +51,7 @@ public class CategoriaMovimentoController {
      * Aggiorna una categoria esistente.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaMovimento> updateCategoria(@PathVariable Long id, @RequestBody CategoriaMovimento categoriaRequest) {
+    public ResponseEntity<CategoriaMovimento> updateCategoriaMovimento(@PathVariable Long id, @RequestBody CategoriaMovimento categoriaRequest) {
         return ResponseEntity.ok(categoriaMovimentoService.updateCategoria(id, categoriaRequest.getNome()));
     }
 
@@ -61,7 +59,7 @@ public class CategoriaMovimentoController {
      * Elimina una categoria.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategoria(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCategoriaMovimento(@PathVariable Long id) {
         categoriaMovimentoService.deleteCategoria(id);
         return ResponseEntity.noContent().build();
     }
