@@ -181,7 +181,7 @@ public class FatturaService {
             primaNota.setDataOperazione(fattura.getDataEmissione());
             primaNota.setFattura(fattura);
             primaNota.setImporto(totaleDovuto);
-            primaNota.setIncaricoId(fattura.getOrdine().getId());
+            primaNota.setOrdine(fattura.getOrdine());
             primaNota.setNome(fattura.getNumeroFattura());
             primaNota.setTipoMovimento(TipoMovimento.ENTRATA);
             primaNota.setUser(currentUser);

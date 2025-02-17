@@ -65,7 +65,7 @@ public class PrimaNotaService {
             existing.setImporto(updatedPrimaNota.getImporto());
             existing.setTipoMovimento(updatedPrimaNota.getTipoMovimento());
             existing.setFattura(updatedPrimaNota.getFattura());
-            existing.setIncaricoId(updatedPrimaNota.getIncaricoId());
+            existing.setOrdine(updatedPrimaNota.getOrdine());
             return primaNotaRepository.save(existing);
         }).orElseThrow(() -> new RuntimeException("Operazione non trovata"));
     }
@@ -139,10 +139,10 @@ public class PrimaNotaService {
             Map<Long, BigDecimal> uscitePerIncarico = new HashMap<>();
         
             for (PrimaNota uscita : uscite) {
-                if (uscita.getIncaricoId() != null) {
+                if (uscita.getOrdine().getId() != null) {
                     uscitePerIncarico.put(
-                        uscita.getIncaricoId(),
-                        uscitePerIncarico.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto())
+                        uscita.getOrdine().getId(),
+                        uscitePerIncarico.getOrDefault(uscita.getOrdine().getId(), BigDecimal.ZERO).add(uscita.getImporto())
                     );
                 }
             }
@@ -179,19 +179,19 @@ public class PrimaNotaService {
             Map<Long, BigDecimal> totaleUscitePerIncarico = new HashMap<>();
 
             for (PrimaNota entrata : entrate) {
-                if (entrata.getIncaricoId() != null) {
+                if (entrata.getOrdine().getId() != null) {
                     totaleEntratePerIncarico.put(
-                        entrata.getIncaricoId(),
-                        totaleEntratePerIncarico.getOrDefault(entrata.getIncaricoId(), BigDecimal.ZERO).add(entrata.getImporto())
+                        entrata.getOrdine().getId(),
+                        totaleEntratePerIncarico.getOrDefault(entrata.getOrdine().getId(), BigDecimal.ZERO).add(entrata.getImporto())
                     );
                 }
             }
 
             for (PrimaNota uscita : uscite) {
-                if (uscita.getIncaricoId() != null) {
+                if (uscita.getOrdine().getId() != null) {
                     totaleUscitePerIncarico.put(
-                        uscita.getIncaricoId(),
-                        totaleUscitePerIncarico.getOrDefault(uscita.getIncaricoId(), BigDecimal.ZERO).add(uscita.getImporto())
+                        uscita.getOrdine().getId(),
+                        totaleUscitePerIncarico.getOrDefault(uscita.getOrdine().getId(), BigDecimal.ZERO).add(uscita.getImporto())
                     );
                 }
             }
