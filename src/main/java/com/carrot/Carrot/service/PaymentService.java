@@ -6,7 +6,6 @@ import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class PaymentService {
 
@@ -18,6 +17,7 @@ public class PaymentService {
     
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION) // Modalità abbonamento
+                .setClientReferenceId(userId.toString()) // 🔥 Aggiunto clientReferenceId per evitare null
                 .setSuccessUrl("https://app.powerwebsoftware.it/success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl("https://app.powerwebsoftware.it/cancel")
                 .addLineItem(SessionCreateParams.LineItem.builder()
@@ -44,4 +44,4 @@ public class PaymentService {
             throw new RuntimeException("Errore nella creazione della sessione di pagamento", e);
         }
     }
-    }
+}
