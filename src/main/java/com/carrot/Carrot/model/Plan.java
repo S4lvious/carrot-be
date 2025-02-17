@@ -15,7 +15,9 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor
 public class Plan {
 
-    @JdbcTypeCode(SqlTypes.BINARY) // CORRETTO PER HIBERNATE 6+
+    @Id
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.BINARY) // Gestisce UUID come BINARY(16) in MySQL
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
