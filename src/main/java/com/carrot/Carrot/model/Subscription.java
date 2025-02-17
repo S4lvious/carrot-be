@@ -5,6 +5,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "subscriptions")
 @Getter
@@ -14,6 +17,9 @@ import java.util.UUID;
 public class Subscription {
 
     @Id
+        @JdbcTypeCode(SqlTypes.BINARY) // CORRETTO PER HIBERNATE 6+
+    @Column(columnDefinition = "BINARY(16)")
+
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 

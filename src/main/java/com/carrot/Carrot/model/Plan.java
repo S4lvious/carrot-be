@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "plans")
 @Getter
@@ -12,7 +15,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Plan {
 
-    @Id
+    @JdbcTypeCode(SqlTypes.BINARY) // CORRETTO PER HIBERNATE 6+
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     @Column(nullable = false, unique = true)
