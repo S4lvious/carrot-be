@@ -2,7 +2,10 @@ package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.UserRepository;
+import com.carrot.Carrot.security.MyUserDetails;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,6 +19,22 @@ public class UserService {
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
+
+            private User getCurrentUser() {
+        MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder
+                                        .getContext()
+                                        .getAuthentication()
+                                        .getPrincipal();
+        return userDetails.getUser();
+    }
+
+
+
+    public User getUser() {
+        return userRepository.findById(getCurrentUser().getId()).get();
+    }
+
 
     public boolean esisteUtente() {
         return userRepository.count() > 0;
