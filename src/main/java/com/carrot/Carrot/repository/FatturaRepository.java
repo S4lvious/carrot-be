@@ -3,6 +3,8 @@ package com.carrot.Carrot.repository;
 import com.carrot.Carrot.model.Fattura;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,6 +21,9 @@ public interface FatturaRepository extends JpaRepository<Fattura, Long> {
     List<Fattura> findByStatoAndUserId(String stato, Long userId);
     boolean existsByOrdineIdAndUserId(Long ordineId, Long userId);
     List<Fattura> findTop5ByUserIdOrderByDataEmissioneDesc(Long currentUserId);
+    @Query("SELECT COUNT(f) FROM Fattura f WHERE f.user.id = :userId AND YEAR(f.dataEmissione) = :anno")
+    int countByUserAndYear(@Param("userId") Long userId, @Param("anno") int anno);
+
 
 
 }

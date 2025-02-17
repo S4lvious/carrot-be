@@ -107,7 +107,10 @@ public class FatturaService {
         Fattura fattura = new Fattura();
         fattura.setUser(currentUser); // Associa la fattura all'utente corrente
         fattura.setDataEmissione(LocalDate.now());
-        fattura.setNumeroFattura(String.format("%d-%03d", LocalDate.now().getYear(), fatturaRepository.count() + 1));
+        int annoCorrente = LocalDate.now().getYear();
+        int numeroProgressivo = fatturaRepository.countByUserAndYear(fattura.getUser().getId(), annoCorrente) + 1;
+        String numeroFattura = String.format("%d-%03d", annoCorrente, numeroProgressivo);
+        fattura.setNumeroFattura(numeroFattura);
         fattura.setOrdine(incarico);
 
         BigDecimal totaleNetto = incarico.getDettagliOrdine().stream()
