@@ -6,6 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Table(name = "fatture")
 @Getter @Setter
@@ -23,6 +26,7 @@ public class Fattura {
 
     @OneToOne
     @JoinColumn(name = "ordine_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Ordine ordine;
 
     @Column(name = "numero_fattura", nullable = false)

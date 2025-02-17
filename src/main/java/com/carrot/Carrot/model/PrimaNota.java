@@ -6,6 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.carrot.Carrot.enumerator.TipoMovimento;
 
 @Entity
@@ -25,15 +28,17 @@ public class PrimaNota {
     private String nome;
 
     @ManyToOne
-    @JoinColumn(name = "categoria_id", nullable = false)
-    private Categoria categoria;
+    @JoinColumn(name = "categoria_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)    
+    private CategoriaMovimento categoria;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user; 
 
     @ManyToOne
-    @JoinColumn(name = "metodo_pagamento_id", nullable = false)
+    @JoinColumn(name = "metodo_pagamento_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private MetodoPagamento metodoPagamento; 
 
     @Column(nullable = false)
@@ -45,9 +50,12 @@ public class PrimaNota {
 
     @ManyToOne
     @JoinColumn(name = "fattura_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Fattura fattura;  // Se è un'entrata legata a una fattura emessa
-
+    
+    @ManyToOne
     @Column(name = "incarico_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Long incaricoId;  // Se l’operazione è legata a un incarico ricevuto
 
 }

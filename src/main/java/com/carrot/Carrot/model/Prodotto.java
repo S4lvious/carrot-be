@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Table(name = "prodotti")
 @Getter @Setter
@@ -29,7 +32,8 @@ public class Prodotto {
     private BigDecimal prezzo;
 
     @ManyToOne
-    @JoinColumn(name = "categoria_id", nullable = false)
+    @JoinColumn(name = "categoria_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Categoria categoria;
 
     @Column(name = "aliquota_iva", nullable = false)

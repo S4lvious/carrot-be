@@ -3,6 +3,9 @@ package com.carrot.Carrot.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Table(name = "operazioni")
 public class Operazione {
@@ -17,6 +20,7 @@ public class Operazione {
     private LocalDateTime dataOperazione;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
 

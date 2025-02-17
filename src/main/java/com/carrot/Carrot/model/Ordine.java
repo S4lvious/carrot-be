@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -20,10 +23,12 @@ public class Ordine {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Column(name = "data_ordine", nullable = false)

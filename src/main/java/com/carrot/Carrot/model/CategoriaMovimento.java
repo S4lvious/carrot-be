@@ -7,10 +7,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "metodo_pagamento")
+@Table(name = "categorie_movimenti")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class MetodoPagamento {
+public class CategoriaMovimento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,4 +23,5 @@ public class MetodoPagamento {
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
 }

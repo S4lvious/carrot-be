@@ -2,6 +2,7 @@ package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.enumerator.TipoMovimento;
 import com.carrot.Carrot.model.*;
+import com.carrot.Carrot.repository.CategoriaMovimentoRepository;
 import com.carrot.Carrot.repository.FatturaRepository;
 import com.carrot.Carrot.repository.MetodoPagamentoRepository;
 import com.carrot.Carrot.repository.OrdineRepository;
@@ -48,9 +49,6 @@ public class FatturaService {
 
     @Autowired
     private PrimaNotaRepository primaNotaRepository;
-
-    @Autowired
-    private MetodoPagamentoRepository metodoPagamentoRepository;
 
 
     // Metodo di supporto per ottenere l'utente corrente
@@ -180,15 +178,6 @@ public class FatturaService {
 
         if (inserisciMovimento) {
             PrimaNota primaNota = new PrimaNota();
-            if (!fattura.getOrdine().getDettagliOrdine().isEmpty()) {
-                primaNota.setCategoria(fattura.getOrdine().getDettagliOrdine().get(0).getProdotto().getCategoria());
-            }
-            
-            // Controlla se esiste almeno un metodo di pagamento associato all'utente
-            List<MetodoPagamento> metodiPagamento = metodoPagamentoRepository.findByUserId(currentUser.getId());
-            if (!metodiPagamento.isEmpty()) {
-                primaNota.setMetodoPagamento(metodiPagamento.get(0));
-            }
             primaNota.setDataOperazione(fattura.getDataEmissione());
             primaNota.setFattura(fattura);
             primaNota.setImporto(totaleDovuto);

@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
@@ -20,6 +23,7 @@ public class DettaglioOrdine {
     @ManyToOne
     @JoinColumn(name = "ordine_id", nullable = false)
     @JsonBackReference
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Ordine ordine;
 
     @ManyToOne
