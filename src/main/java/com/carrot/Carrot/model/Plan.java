@@ -13,36 +13,21 @@ import java.util.UUID;
 public class Plan {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String name; // Mensile, Trimestrale, etc.
+    private String name;
 
     @Column(nullable = false)
-    private int durationDays; // Numero di giorni di validità
+    private int durationDays;
 
     @Column(nullable = false)
-    private double price; // Prezzo in euro
-    @Version
-    private Integer version = 0;
-
-    public Plan(UUID id, String name, int durationDays, double price, int version) {
-        this.id = id;
-        this.name = name;
-        this.durationDays = durationDays;
-        this.price = price;
-        this.version = version;
-    }
+    private double price;
 
     public Plan(String name, int durationDays, double price) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.durationDays = durationDays;
         this.price = price;
-        this.version = 0;
     }
-
-
-
 }

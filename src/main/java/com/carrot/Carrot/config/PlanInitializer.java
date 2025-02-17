@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class PlanInitializer implements CommandLineRunner {
@@ -19,17 +18,17 @@ public class PlanInitializer implements CommandLineRunner {
     }
 
     @Override
-public void run(String... args) {
-    List<Plan> plans = Arrays.asList(
-        new Plan(UUID.randomUUID(), "Mensile", 30, 9.99, 0),
-        new Plan(UUID.randomUUID(), "Trimestrale", 90, 24.99, 0),
-        new Plan(UUID.randomUUID(), "Annuale", 365, 89.99, 0)
-    );
-
-    for (Plan plan : plans) {
-        if (!planRepository.existsByName(plan.getName())) { // Controlla in base al nome invece che all'ID
-            planRepository.save(plan);
+    public void run(String... args) {
+        List<Plan> plans = Arrays.asList(
+            new Plan("Mensile", 30, 9.99),
+            new Plan("Trimestrale", 90, 24.99),
+            new Plan("Annuale", 365, 89.99)
+        );
+    
+        for (Plan plan : plans) {
+            if (!planRepository.existsByName(plan.getName())) { 
+                planRepository.save(plan);
+            }
         }
     }
-}
-}
+    }
