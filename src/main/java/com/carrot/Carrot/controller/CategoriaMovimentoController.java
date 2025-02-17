@@ -31,7 +31,7 @@ public class CategoriaMovimentoController {
     /**
      * Recupera tutte le categorie di un utente specifico.
      */
-    @GetMapping("/{userId}")
+    @GetMapping()
     public ResponseEntity<List<CategoriaMovimento>> getCategorieByUser() {
         User user = getCurrentUser();
         return ResponseEntity.ok(categoriaMovimentoService.getCategorieByUser(user));
@@ -40,7 +40,7 @@ public class CategoriaMovimentoController {
     /**
      * Crea una nuova categoria.
      */
-    @PostMapping("/{userId}")
+    @PostMapping()
     public ResponseEntity<CategoriaMovimento> createCategoriaMovimento(@RequestBody CategoriaMovimento categoriaRequest) {
         User user = getCurrentUser();
         CategoriaMovimento categoria = categoriaMovimentoService.createCategoria(categoriaRequest.getNome(), user);
