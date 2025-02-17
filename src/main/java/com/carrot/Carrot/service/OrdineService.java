@@ -1,11 +1,13 @@
 package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.model.Ordine;
+import com.carrot.Carrot.model.Prodotto;
 import com.carrot.Carrot.model.DettaglioOrdine;
 import com.carrot.Carrot.model.Operazione;
 import com.carrot.Carrot.model.Cliente;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.OrdineRepository;
+import com.carrot.Carrot.repository.ProdottoRepository;
 import com.carrot.Carrot.repository.ClienteRepository;
 import com.carrot.Carrot.repository.DettaglioOrdineRepository;
 import com.carrot.Carrot.repository.OperazioneRepository;
@@ -26,13 +28,15 @@ public class OrdineService {
     private final ClienteRepository clienteRepository;
     private final DettaglioOrdineRepository dettaglioOrdineRepository;
     private final OperazioneRepository operazioneRepository;
+    private final ProdottoRepository prodottoRepository;
 
     public OrdineService(OrdineRepository ordineRepository, ClienteRepository clienteRepository,
-                         DettaglioOrdineRepository dettaglioOrdineRepository, OperazioneRepository operazioneRepository) {
+                         DettaglioOrdineRepository dettaglioOrdineRepository, OperazioneRepository operazioneRepository, ProdottoRepository prodottoRepository) {
         this.ordineRepository = ordineRepository;
         this.clienteRepository = clienteRepository;
         this.dettaglioOrdineRepository = dettaglioOrdineRepository;
         this.operazioneRepository = operazioneRepository;
+        this.prodottoRepository = prodottoRepository;
     }
 
     // Metodo di supporto per ottenere l'utente autenticato
@@ -64,86 +68,100 @@ public class OrdineService {
 
     @Transactional
     public Optional<Ordine> addOrdine(Ordine ordine) {
-        // Associa l'ordine all'utente corrente
         User currentUser = getCurrentUser();
         ordine.setUser(currentUser);
 
-        // Imposta il riferimento dell'ordine in ogni dettaglio
         if (ordine.getDettagliOrdine() != null) {
             for (DettaglioOrdine dettaglio : ordine.getDettagliOrdine()) {
                 dettaglio.setOrdine(ordine);
+                
+                // **Scalare la quantità se il prodotto è esauribile**
+                Prodotto prodotto = dettaglio.getProdotto();
+                if (prodotto.isEsauribile()) {
+                    int nuovaQuantita = prodotto.getQuantita() - dettaglio.getQuantita();
+                    if (nuovaQuantita < 0) {
+                        throw new IllegalArgumentException("Quantità insufficiente per il prodotto: " + prodotto.getNome());
+                    }
+                    prodotto.setQuantita(nuovaQuantita);
+                    prodottoRepository.save(prodotto);
+                }
             }
         }
-        
-        // Salva l'ordine (cascade ALL si occuperà di salvare anche i dettagli)
+
         ordineRepository.save(ordine);
-        
-        // Aggiornamento del cliente: (opzionale, ma si può controllare anche che il cliente appartenga all'utente corrente)
-        Cliente cliente = ordine.getCliente();
-        if (cliente != null) {
-            cliente.setDataUltimoOrdine(LocalDate.now());
-            clienteRepository.save(cliente);
+
+        if (ordine.getCliente() != null) {
+            ordine.getCliente().setDataUltimoOrdine(LocalDate.now());
+            clienteRepository.save(ordine.getCliente());
         }
-        
+
         Operazione operazione = new Operazione(
                 "Ordine", "Aggiunta",
-                "Ordine creato: " + ordine.getId() + " per cliente " + (cliente != null ? cliente.getId() : "N/A"),
+                "Ordine creato: " + ordine.getId(),
                 LocalDateTime.now(),
                 currentUser);
-        // Associa l'operazione all'utente corrente
         operazione.setUser(currentUser);
         operazioneRepository.save(operazione);
-        
+
         return Optional.of(ordine);
     }
-    
+
     @Transactional
     public Optional<Ordine> updateOrdine(Ordine ordine) {
         Long currentUserId = getCurrentUser().getId();
         User currentUser = getCurrentUser();
         Optional<Ordine> existingOrdineOpt = ordineRepository.findByIdAndUserId(ordine.getId(), currentUserId);
-        
+
         if (existingOrdineOpt.isPresent()) {
             Ordine existingOrdine = existingOrdineOpt.get();
-    
-            // Aggiorna i campi principali
-            existingOrdine.setCliente(ordine.getCliente());
-            existingOrdine.setStato(ordine.getStato());
-            existingOrdine.setFatturato(ordine.isFatturato());
-    
-            // Gestione dettagli ordine:
-            // Pulisci la lista dei dettagli esistenti
+
+            // **Ripristina le quantità dei prodotti esauribili prima di aggiornarli**
+            for (DettaglioOrdine oldDettaglio : existingOrdine.getDettagliOrdine()) {
+                Prodotto prodotto = oldDettaglio.getProdotto();
+                if (prodotto.isEsauribile()) {
+                    prodotto.setQuantita(prodotto.getQuantita() + oldDettaglio.getQuantita());
+                    prodottoRepository.save(prodotto);
+                }
+            }
+
+            // **Aggiorna l'ordine con i nuovi dettagli**
             existingOrdine.getDettagliOrdine().clear();
-    
-            // Per ogni dettaglio nel nuovo ordine, imposta il riferimento all'ordine e aggiungilo
             for (DettaglioOrdine dettaglio : ordine.getDettagliOrdine()) {
                 dettaglio.setOrdine(existingOrdine);
                 existingOrdine.getDettagliOrdine().add(dettaglio);
+
+                Prodotto prodotto = dettaglio.getProdotto();
+                if (prodotto.isEsauribile()) {
+                    int nuovaQuantita = prodotto.getQuantita() - dettaglio.getQuantita();
+                    if (nuovaQuantita < 0) {
+                        throw new IllegalArgumentException("Quantità insufficiente per il prodotto: " + prodotto.getNome());
+                    }
+                    prodotto.setQuantita(nuovaQuantita);
+                    prodottoRepository.save(prodotto);
+                }
             }
-    
-            // Aggiorna il totale sommando (prezzoUnitario * quantita) per ciascun dettaglio
+
             BigDecimal totale = existingOrdine.getDettagliOrdine()
                 .stream()
                 .map(d -> d.getPrezzoUnitario().multiply(BigDecimal.valueOf(d.getQuantita())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             existingOrdine.setTotale(totale);
-    
-            // Salva l'ordine aggiornato (grazie al cascade, i nuovi dettagli saranno salvati e gli orfani eliminati)
+
             Ordine ordineAggiornato = ordineRepository.save(existingOrdine);
-    
-            // Registra l'operazione
+
             Operazione operazione = new Operazione(
                     "Ordine", "Modifica",
                     "Ordine modificato: " + ordine.getId(),
                     LocalDateTime.now(),
                     currentUser);
-            operazione.setUser(getCurrentUser());
+            operazione.setUser(currentUser);
             operazioneRepository.save(operazione);
-    
+
             return Optional.of(ordineAggiornato);
         }
         return Optional.empty();
     }
+
 
     @Transactional
     public void deleteOrdine(Long id) {
