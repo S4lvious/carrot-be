@@ -25,7 +25,7 @@ public class Fattura {
     @JoinColumn(name = "ordine_id", nullable = false)
     private Ordine ordine;
 
-    @Column(name = "numero_fattura", nullable = false, unique = true)
+    @Column(name = "numero_fattura", nullable = false)
     private String numeroFattura; // Es: "2024-001"
 
     @Column(name = "data_emissione", nullable = false)

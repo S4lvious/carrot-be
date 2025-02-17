@@ -31,7 +31,7 @@ public class Cliente {
     private String email;
     private String telefono;
     
-    @Column(unique = true, nullable = true)
+    @Column(nullable = true)
     private String codiceFiscale;
     
     private String partitaIva;
