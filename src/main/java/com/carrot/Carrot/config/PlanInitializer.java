@@ -20,14 +20,16 @@ public class PlanInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (planRepository.count() == 0) {
-            List<Plan> plans = Arrays.asList(
-                    new Plan(UUID.randomUUID(), "Mensile", 30, 9.99),
-                    new Plan(UUID.randomUUID(), "Trimestrale", 90, 24.99),
-                    new Plan(UUID.randomUUID(), "Semestrale", 180, 44.99),
-                    new Plan(UUID.randomUUID(), "Annuale", 365, 79.99)
-            );
-            planRepository.saveAll(plans);
+        List<Plan> plans = Arrays.asList( // Usa Arrays.asList() per evitare errori con List.of()
+        new Plan("Mensile", 30, 9.99),
+        new Plan("Trimestrale", 90, 24.99),
+        new Plan("Annuale", 365, 89.99)
+    );
+    
+        for (Plan plan : plans) {
+            if (!planRepository.existsById(plan.getId())) {
+                planRepository.save(plan);
+            }
         }
     }
 }

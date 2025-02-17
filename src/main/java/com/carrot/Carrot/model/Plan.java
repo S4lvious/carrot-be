@@ -24,4 +24,15 @@ public class Plan {
 
     @Column(nullable = false)
     private double price; // Prezzo in euro
+    @Version
+    private Integer version;
+
+    public Plan(String name, int durationDays, double price) {
+        this.id = UUID.randomUUID(); // Generiamo un UUID automaticamente
+        this.name = name;
+        this.durationDays = durationDays;
+        this.price = price;
+    }
+
+
 }
