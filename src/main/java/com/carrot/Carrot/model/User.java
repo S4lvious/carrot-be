@@ -3,6 +3,8 @@ package com.carrot.Carrot.model;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -14,15 +16,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO) // Usiamo UUID per scalabilità
     private Long id;
 
     @Column(unique = true, nullable = false)
     private String username;
-    
+
     @Column(nullable = false)
     private String password;
-    
+
     private String nome; // Nome completo se è un professionista, oppure Nome del Referente dell'azienda.
 
     private String cognome; // Solo per professionisti
@@ -52,11 +54,32 @@ public class User {
 
     private String telefono;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String iban; // Per pagamenti
 
+    @Column(nullable = false)
+    private boolean enabled = false; // False finché l'utente non verifica l'email
+
+    @Column(nullable = false)
+    private boolean trialActive = true; // Se l'utente è ancora nel periodo di prova
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER; // Ruolo dell'utente
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Subscription subscription; // Collega la sottoscrizione dell'utente
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     public boolean isAzienda() {
         return ragioneSociale != null && !ragioneSociale.trim().isEmpty();
+    }
+
+    public enum Role {
+        USER, ADMIN
     }
 }
