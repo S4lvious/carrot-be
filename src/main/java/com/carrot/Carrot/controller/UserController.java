@@ -21,7 +21,7 @@ public class UserController {
         return ResponseEntity.ok(userService.esisteUtente());
     }
 
-    @GetMapping("getUser")
+    @GetMapping("/getUser")
     public ResponseEntity<User> getUser() {
         return ResponseEntity.ok(userService.getUser());
     }
