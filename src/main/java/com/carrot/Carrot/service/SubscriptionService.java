@@ -124,6 +124,7 @@ public class SubscriptionService {
         if (existingSubscription.isPresent()) {
             // L'utente ha già un abbonamento, aggiorniamo la scadenza
             subscription = existingSubscription.get();
+            subscription.setPlan(plan);
             subscription.setEndDate(subscription.getEndDate().plusDays(plan.getDurationDays()));
             if (subscription.isTrial()) {
                 subscription.setTrial(false);

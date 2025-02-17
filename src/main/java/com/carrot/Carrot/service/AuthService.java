@@ -41,11 +41,18 @@ public class AuthService {
 
     }
 
-    public void registerUser(User user, String planId) throws MessagingException {
+
+    public void resendEmail(User user) throws MessagingException {
+        String token = tokenService.generateVerificationToken(user);
+        emailService.sendVerificationEmail(user.getEmail(), token);
+
+    }
+
+    public void registerUser(User user, String planName) throws MessagingException {
         // ✅ Verifica se il planId è valido PRIMA di creare l'utente
         Plan plan = null;
-        if (planId != null) {
-            plan = planRepository.findById(planId).orElse(null);
+        if (planName != null) {
+            plan = planRepository.findByName(planName).orElse(null);
             if (plan == null) {
                 throw new IllegalArgumentException("Piano non valido");
             }
@@ -59,9 +66,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
     
         // ✅ Salva l'utente
-        System.out.println("Prima del salvataggio: enabled=" + user.isEnabled() + ", trialActive=" + user.isTrialActive());
         userRepository.save(user);
-        System.out.println("Dopo il salvataggio: enabled=" + userRepository.findById(user.getId()).get().isEnabled() + ", trialActive=" + userRepository.findById(user.getId()).get().isTrialActive());
             
         // ✅ Generiamo il token di verifica
         String token = tokenService.generateVerificationToken(user);

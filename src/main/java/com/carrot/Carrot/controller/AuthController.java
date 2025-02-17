@@ -52,11 +52,20 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user, 
-                                               @RequestParam(required = false) String planId) 
+                                               @RequestParam(required = false) String planName) 
                                                throws MessagingException {
-        authService.registerUser(user, planId);
+        authService.registerUser(user, planName);
         return ResponseEntity.ok("Registrazione completata! Controlla la tua email per verificare l'account.");
     }
+
+    @PostMapping("/resend")
+    public ResponseEntity<String> resendEmail(@RequestBody User user, 
+                                               @RequestParam(required = false) String planName) 
+                                               throws MessagingException {
+        authService.resendEmail(user);
+        return ResponseEntity.ok("Email di conferma reinviata");
+    }
+
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         String messageOrUrl = authService.verifyEmail(token);
