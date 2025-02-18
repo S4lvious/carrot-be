@@ -34,6 +34,9 @@ public class Ordine {
     @Column(name = "data_ordine", nullable = false)
     private LocalDateTime dataOrdine = LocalDateTime.now();
 
+    @Column(name = "numero_ordine", nullable = false)
+    private String numero_ordine;
+
     @Column(nullable = false)
     private BigDecimal totale;
 

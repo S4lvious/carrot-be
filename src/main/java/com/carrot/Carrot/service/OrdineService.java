@@ -87,7 +87,10 @@ public class OrdineService {
                 }
             }
         }
-
+        int annoCorrente = LocalDate.now().getYear();
+        int progressivo = ordineRepository.countByUserAndYear(ordine.getUser().getId(), annoCorrente) + 1;
+        String numeroOrdine = annoCorrente + "-" + String.format("%03d", progressivo);
+        ordine.setNumero_ordine(numeroOrdine);
         ordineRepository.save(ordine);
 
         if (ordine.getCliente() != null) {
