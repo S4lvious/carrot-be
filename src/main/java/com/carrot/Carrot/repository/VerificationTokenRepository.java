@@ -8,9 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
-import java.util.UUID;
 
-public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
+public interface VerificationTokenRepository extends JpaRepository<VerificationToken, String> {
     Optional<VerificationToken> findByToken(String token);
     void deleteByUserId(Long userId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
