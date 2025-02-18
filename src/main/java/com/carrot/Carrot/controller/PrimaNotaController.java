@@ -1,5 +1,6 @@
 package com.carrot.Carrot.controller;
 
+import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.model.PrimaNota;
 import com.carrot.Carrot.service.PrimaNotaService;
 import com.carrot.Carrot.enumerator.TipoMovimento;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,9 +24,25 @@ public class PrimaNotaController {
 
     // ✅ Ottenere tutte le operazioni dell'utente autenticato
     @GetMapping
-    public List<PrimaNota> getAllByUser() {
-        return primaNotaService.getAllByUser();
+    public List<Map<String, Object>> getAllByUser() {
+        List<PrimaNota> primaNote = primaNotaService.getAllByUser();
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (PrimaNota nota : primaNote) {
+            Map<String, Object> notaData = new HashMap<>();
+            notaData.put("primaNota", nota);
+            
+            // Recuperiamo l'oggetto `Incarico` solo se incaricoId non è null
+            Ordine incarico = primaNotaService.getIncarico(nota.getIncaricoId());
+            notaData.put("incarico", incarico);
+
+            result.add(notaData);
+        }
+
+        return result;
     }
+
 
     // ✅ Ottenere una singola operazione
     @GetMapping("/{id}")

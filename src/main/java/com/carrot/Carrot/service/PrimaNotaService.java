@@ -2,9 +2,11 @@ package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.enumerator.TipoMovimento;
 import com.carrot.Carrot.model.DettaglioOrdine;
+import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.model.PrimaNota;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.DettaglioOrdineRepository;
+import com.carrot.Carrot.repository.OrdineRepository;
 import com.carrot.Carrot.repository.PrimaNotaRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 
@@ -26,6 +28,8 @@ public class PrimaNotaService {
     private PrimaNotaRepository primaNotaRepository;
     @Autowired
     private DettaglioOrdineRepository dettaglioOrdineRepository;
+    @Autowired
+    private OrdineRepository ordineRepository;
 
 
     // Metodo per ottenere l'utente autenticato
@@ -128,6 +132,14 @@ public class PrimaNotaService {
                 .collect(Collectors.groupingBy(p -> p.getCategoria().getNome(),
                         Collectors.reducing(BigDecimal.ZERO, PrimaNota::getImporto, BigDecimal::add)));
     }
+
+    public Ordine getIncarico(Long incaricoId) {
+    if (incaricoId == null) {
+            return null;
+        }
+        return ordineRepository.findById(incaricoId).orElse(null);
+    }
+
 
         public Map<String, BigDecimal> getProdottiPiuCostosiInUscite() {
             Long userId = getCurrentUser().getId();
