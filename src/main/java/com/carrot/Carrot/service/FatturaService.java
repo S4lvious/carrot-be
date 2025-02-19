@@ -340,7 +340,7 @@ public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
     public void aggiornaFatturaPerAzienda(Long fatturaId, String partitaIva, String stato, String messaggio) {
         Query query = entityManager.createQuery(
             "UPDATE Fattura f SET f.SdiStato = :stato, f.SdiMessaggio = :messaggio " +
-            "WHERE f.italaID = :id AND f.partita_iva_emittente = :partitaIva"
+            "WHERE f.italaID = :id AND f.partitaIVAEmittente = :partitaIva"
         );
         query.setParameter("stato", stato);
         query.setParameter("messaggio", messaggio);
