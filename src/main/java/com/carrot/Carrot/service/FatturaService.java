@@ -268,6 +268,8 @@ public class FatturaService {
 public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
     // 1) Costruisci il body JSON come una mappa o un DTO
     Map<String, Object> jsonBody = costruisciJsonFattura(fattura);
+    System.out.println(jsonBody);
+    System.out.println(jsonBody);
 
     // 2) Imposta gli headers
     HttpHeaders headers = new HttpHeaders();
