@@ -52,7 +52,7 @@ public class ProdottoService {
         User currentUser = getCurrentUser();
         prodotto.setUser(currentUser);
         Prodotto nuovoProdotto = prodottoRepository.save(prodotto);
-
+    
         // Registra l'operazione, associandola all'utente corrente
         Operazione operazione = new Operazione(
                 "Prodotto",
@@ -61,15 +61,17 @@ public class ProdottoService {
                 LocalDateTime.now(),
                 getCurrentUser());
         operazioneRepository.save(operazione);
-
+    
         return nuovoProdotto;
     }
+    
 
     // Aggiorna il prodotto solo se appartiene all'utente corrente
     public Prodotto updateProdotto(Prodotto prodottoAggiornato) {
         Long currentUserId = getCurrentUser().getId();
         return prodottoRepository.findByIdAndUserId(prodottoAggiornato.getId(), currentUserId)
                 .map(prodotto -> {
+                    // Aggiorna i campi "classici"
                     prodotto.setNome(prodottoAggiornato.getNome());
                     prodotto.setDescrizione(prodottoAggiornato.getDescrizione());
                     prodotto.setPrezzo(prodottoAggiornato.getPrezzo());
@@ -77,23 +79,33 @@ public class ProdottoService {
                     prodotto.setAliquotaIVA(prodottoAggiornato.getAliquotaIVA());
                     prodotto.setQuantita(prodottoAggiornato.getQuantita());
                     prodotto.setEsauribile(prodottoAggiornato.isEsauribile());
-
+    
+                    // Aggiorna i campi aggiuntivi (fatturazione elettronica)
+                    prodotto.setCodiceTipo(prodottoAggiornato.getCodiceTipo());
+                    prodotto.setCodiceValore(prodottoAggiornato.getCodiceValore());
+                    prodotto.setUnitaMisura(prodottoAggiornato.getUnitaMisura());
+                    prodotto.setNatura(prodottoAggiornato.getNatura());
+                    prodotto.setEsigibilitaIVA(prodottoAggiornato.getEsigibilitaIVA());
+    
+                    // Salva le modifiche
                     Prodotto prodottoModificato = prodottoRepository.save(prodotto);
-
-                    // Registra l'operazione
+    
+                    // Traccia l'operazione
                     Operazione operazione = new Operazione(
                             "Prodotto",
                             "Modifica",
                             "Modifica prodotto #" + prodotto.getId(),
                             LocalDateTime.now(),
-                            getCurrentUser());
+                            getCurrentUser()
+                    );
                     operazioneRepository.save(operazione);
-
+    
                     return prodottoModificato;
                 })
-                .orElseThrow(() -> new RuntimeException("Prodotto non trovato con ID: " + prodottoAggiornato.getId()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Prodotto non trovato con ID: " + prodottoAggiornato.getId()));
     }
-
+        
     // Elimina il prodotto solo se appartiene all'utente corrente
     public void deleteProdotto(Long id) {
         Long currentUserId = getCurrentUser().getId();

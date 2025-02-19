@@ -2,13 +2,14 @@ package com.carrot.Carrot.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "clienti")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Cliente {
 
     @Id
@@ -18,7 +19,6 @@ public class Cliente {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 
     private String ragioneSociale;
     
@@ -40,6 +40,12 @@ public class Cliente {
     private String citta;
     private String provincia;
     private String cap;
+    
+    // Nuovi campi per le API
+    @Column(name = "codice_sdi")
+    private String codiceSDI;
+    private String pec;
+    private String nazione; // Codice ISO, es. "IT"
     
     @Lob
     private String note;

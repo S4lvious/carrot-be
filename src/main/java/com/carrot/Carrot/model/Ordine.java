@@ -6,36 +6,35 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.carrot.Carrot.enumerator.CondizioniPagamento;
+import com.carrot.Carrot.enumerator.TipoDocumento;
 
 @Entity
 @Table(name = "ordini")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ordine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Associazione con Cliente
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Column(name = "data_ordine", nullable = false)
     private LocalDateTime dataOrdine = LocalDateTime.now();
 
     @Column(name = "numero_ordine", nullable = false)
-    private String numero_ordine;
+    private String numeroOrdine;
 
     @Column(nullable = false)
     private BigDecimal totale;
@@ -47,11 +46,5 @@ public class Ordine {
     private String stato;
 
     @OneToMany(mappedBy = "ordine", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private List<DettaglioOrdine> dettagliOrdine;
-
-    @Transient
-    public String getNomeCliente() {
-        return cliente != null ? cliente.getNome() : "";
-    }
 }

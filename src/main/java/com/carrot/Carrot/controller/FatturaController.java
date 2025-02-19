@@ -1,5 +1,6 @@
 package com.carrot.Carrot.controller;
 
+import com.carrot.Carrot.dto.FatturaCompletaDTO;
 import com.carrot.Carrot.dto.fatturarequest;
 import com.carrot.Carrot.model.Fattura;
 import com.carrot.Carrot.service.FatturaService;
@@ -25,9 +26,9 @@ public class FatturaController {
     }
 
     @PostMapping("/genera")
-    public ResponseEntity<?> generaFattura(@RequestBody fatturarequest fatturarequest) {
+    public ResponseEntity<?> generaFattura(@RequestBody FatturaCompletaDTO fatturarequest) {
         try {
-            fatturaService.generaFattura(fatturarequest.getOrdine(), fatturarequest.getInserisciMovimento(),fatturarequest.isApplicareRitenuta(), fatturarequest.getRitenutaAcconto(), fatturarequest.getScadenza(), fatturarequest.getStato());
+            fatturaService.generaFatturaCompleta(fatturarequest);
             return ResponseEntity.ok(fatturaService.getAllFatture());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Errore nella generazione della fattura: " + e.getMessage());
