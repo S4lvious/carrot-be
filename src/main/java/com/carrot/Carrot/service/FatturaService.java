@@ -71,119 +71,79 @@ public class FatturaService {
 
     @Transactional
     public Fattura generaFatturaCompleta(FatturaCompletaDTO dto) {
-        // --------------------------------------------------
-        // 1) Estrarre i campi dal DTO
-        // --------------------------------------------------
-        Ordine incarico                = dto.getOrdine();
-        boolean inserisciMovimento     = dto.isInserisciMovimento();
-        boolean applicareRitenuta      = dto.isApplicareRitenuta();
-        BigDecimal ritenutaAcconto     = dto.getRitenutaAcconto();
-        LocalDate scadenza             = dto.getScadenza();
-        String stato                   = dto.getStato();
     
-        // Campi nuovi
-        TipoDocumento tipoDocumento           = dto.getTipoDocumento();     // FATT, NDC
-        String causale                 = dto.getCausale();
-        String causalePagamento        = dto.getCausalePagamento();
+        // 1) CARICO L’ORDINE DAL DB TRAMITE L’ID
+        Long ordineId = dto.getOrdine().getId();
+        Ordine incarico = ordineRepository.findById(ordineId)
+            .orElseThrow(() -> new IllegalStateException("Ordine non trovato"));
     
-        DatiBollo datiBollo                   = dto.getDatiBollo();              // bolloVirtuale, importoBollo
-        DatiCassaPrevidenziale datiCassa      = dto.getDatiCassaPrevidenziale(); // tipoCassa, alCassa, ...
-        DatiPagamento datiPagamento           = dto.getDatiPagamento();          // condizioni + dettaglioPagamento
-        DocumentoRiferimento datiOrdineAcq    = dto.getDatiOrdineAcquisto();
-        DocumentoRiferimento datiContratto    = dto.getDatiContratto();
-        DocumentoRiferimento datiConvenzione  = dto.getDatiConvenzione();
-        DocumentoRiferimento datiRicezione    = dto.getDatiRicezione();
-        DocumentoRiferimento datiFattureColl  = dto.getDatiFattureCollegate();
-    
-        // --------------------------------------------------
-        // 2) Controlli preliminari
-        // --------------------------------------------------
+        // 2) CONTROLLO CHE L’ORDINE SIA DELL’UTENTE CORRENTE + NO FATTURE DOPPIE
         User currentUser = getCurrentUser();
-        // Verifica che l'ordine appartenga all'utente
         if (!incarico.getUser().getId().equals(currentUser.getId())) {
             throw new IllegalStateException("L'ordine non appartiene all'utente autenticato.");
         }
-        // Verifica che non esista già una fattura per quell'ordine (tenant)
         if (fatturaRepository.existsByOrdineIdAndUserId(incarico.getId(), currentUser.getId())) {
             throw new IllegalStateException("Esiste già una fattura per questo ordine.");
         }
     
-        // --------------------------------------------------
-        // 2.1) Verifica dati Emittente (User)
-        // --------------------------------------------------
+        // 3) RECUPERO E VERIFICO DATI DELL’EMITTENTE (USER)
         List<String> erroriEmittente = new ArrayList<>();
         if (currentUser.getPartitaIva() == null) erroriEmittente.add("Partita IVA");
         if (currentUser.getIndirizzo() == null)  erroriEmittente.add("Indirizzo");
         if (currentUser.getCap() == null)        erroriEmittente.add("CAP");
         if (currentUser.getCitta() == null)      erroriEmittente.add("Città");
         if (currentUser.getProvincia() == null)  erroriEmittente.add("Provincia");
-    
         if (!erroriEmittente.isEmpty()) {
             throw new IllegalStateException(
                 "Dati mancanti per l'emittente: " + String.join(", ", erroriEmittente)
             );
         }
     
-        // --------------------------------------------------
-        // 2.2) Verifica dati Cliente
-        // --------------------------------------------------
+        // 4) RECUPERO E VERIFICO DATI DEL CLIENTE
         Cliente cliente = incarico.getCliente();
         if (cliente == null) {
             throw new IllegalStateException("Errore: L'ordine non ha un cliente associato.");
         }
         List<String> erroriCliente = new ArrayList<>();
-        // Almeno uno tra P.IVA o CF dev'essere presente
-        if (cliente.getPartitaIva() == null && cliente.getCodiceFiscale() == null) {
+        if (cliente.getPartitaIva() == null && cliente.getCodiceFiscale() == null)
             erroriCliente.add("Partita IVA o Codice Fiscale (uno dei due obbligatorio)");
-        }
         if (cliente.getIndirizzo() == null) erroriCliente.add("Indirizzo");
         if (cliente.getCap() == null)       erroriCliente.add("CAP");
         if (cliente.getCitta() == null)     erroriCliente.add("Città");
         if (cliente.getProvincia() == null) erroriCliente.add("Provincia");
-    
         if (!erroriCliente.isEmpty()) {
             throw new IllegalStateException(
                 "Dati mancanti per il cliente: " + String.join(", ", erroriCliente)
             );
         }
     
-        // --------------------------------------------------
-        // 3) Creazione della Fattura
-        // --------------------------------------------------
+        // 5) CREO LA FATTURA
         Fattura fattura = new Fattura();
         fattura.setUser(currentUser);
         fattura.setDataEmissione(LocalDate.now());
     
-        // Generazione numero fattura progressivo
+        // Numero Fattura progressivo
         int annoCorrente = LocalDate.now().getYear();
         int numeroProgressivo = fatturaRepository.countByUserAndYear(currentUser.getId(), annoCorrente) + 1;
         String numeroFattura = String.format("%d-%03d", annoCorrente, numeroProgressivo);
         fattura.setNumeroFattura(numeroFattura);
     
-        // Collega l'ordine
+        // Collego l’Ordine persistito (non il DTO) per evitare problemi
         fattura.setOrdine(incarico);
     
-        // --------------------------------------------------
-        // 4) Calcolo totali (Netto, IVA, Lordo)
-        // --------------------------------------------------
+        // 6) CALCOLO I TOTALI (NETTO, IVA, LORDO) DAI DETTAGLI DELL’ORDINE
         BigDecimal totaleNetto = incarico.getDettagliOrdine().stream()
-            .map(dettaglio -> {
-                BigDecimal riga = dettaglio.getPrezzoUnitario().multiply(BigDecimal.valueOf(dettaglio.getQuantita()));
-                return riga;
-            })
+            .map(d -> d.getPrezzoUnitario().multiply(BigDecimal.valueOf(d.getQuantita())))
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         fattura.setTotaleNetto(totaleNetto);
     
         BigDecimal totaleIVA = incarico.getDettagliOrdine().stream()
-            .map(dettaglio -> {
-                BigDecimal imponibileRiga = dettaglio.getPrezzoUnitario()
-                    .multiply(BigDecimal.valueOf(dettaglio.getQuantita()));
-                // es. 22% => prodotto.getAliquotaIVA = 22
-                BigDecimal aliquota = dettaglio.getProdotto().getAliquotaIVA();
-                BigDecimal ivaRiga = imponibileRiga
-                    .multiply(aliquota)
-                    .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
-                return ivaRiga;
+            .map(d -> {
+                BigDecimal imponibileRiga = d.getPrezzoUnitario()
+                        .multiply(BigDecimal.valueOf(d.getQuantita()));
+                BigDecimal aliquota = d.getProdotto().getAliquotaIVA();
+                return imponibileRiga.multiply(aliquota)
+                                     .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
             })
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         fattura.setTotaleIVA(totaleIVA);
@@ -191,16 +151,16 @@ public class FatturaService {
         BigDecimal totaleLordo = totaleNetto.add(totaleIVA);
         fattura.setTotaleLordo(totaleLordo);
     
-        // --------------------------------------------------
-        // 4.1) Ritenuta
-        // --------------------------------------------------
+        // 7) RITENUTA d’ACCONTO
+        boolean applicareRitenuta   = dto.isApplicareRitenuta();
+        BigDecimal ritenutaAcconto  = dto.getRitenutaAcconto();
         fattura.setApplicareRitenuta(applicareRitenuta);
         fattura.setRitenutaAcconto(BigDecimal.ZERO);
         BigDecimal importoRitenuta = BigDecimal.ZERO;
     
         if (applicareRitenuta && ritenutaAcconto != null && ritenutaAcconto.compareTo(BigDecimal.ZERO) > 0) {
             importoRitenuta = totaleLordo.multiply(ritenutaAcconto)
-                .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
+                                          .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
             fattura.setRitenutaAcconto(ritenutaAcconto);
         }
         fattura.setImportoRitenuta(importoRitenuta);
@@ -208,23 +168,16 @@ public class FatturaService {
         BigDecimal totaleDovuto = totaleLordo.subtract(importoRitenuta);
         fattura.setTotaleDovuto(totaleDovuto);
     
-        // --------------------------------------------------
-        // 5) Campi generali
-        // --------------------------------------------------
+        // 8) STATO, SCADENZA, etc.
         fattura.setInviataAdE(false);
-        fattura.setDataScadenza(scadenza);
-        fattura.setStato(stato);
+        fattura.setDataScadenza(dto.getScadenza());
+        fattura.setStato(dto.getStato());  // es. "Pagata" / "Non pagata"
     
-        // --------------------------------------------------
-        // 5.1) Dati dell'Emittente
-        // (Recuperati dal currentUser)
-        // --------------------------------------------------
-        String denominazioneEmittente;
-        if (currentUser.getRagioneSociale() != null && !currentUser.getRagioneSociale().trim().isEmpty()) {
-            denominazioneEmittente = currentUser.getRagioneSociale();
-        } else {
-            denominazioneEmittente = (currentUser.getNome() + " " + currentUser.getCognome()).trim();
-        }
+        // 9) DATI EMITTENTE dal currentUser
+        String denominazioneEmittente = (currentUser.getRagioneSociale() != null 
+            && !currentUser.getRagioneSociale().trim().isEmpty())
+            ? currentUser.getRagioneSociale()
+            : (currentUser.getNome() + " " + currentUser.getCognome()).trim();
     
         fattura.setNomeEmittente(denominazioneEmittente);
         fattura.setIndirizzoEmittente(currentUser.getIndirizzo());
@@ -232,18 +185,15 @@ public class FatturaService {
         fattura.setCittaEmittente(currentUser.getCitta());
         fattura.setProvinciaEmittente(currentUser.getProvincia());
         fattura.setPartitaIVAEmittente(currentUser.getPartitaIva());
-        fattura.setCodiceFiscaleEmittente(currentUser.getCodiceFiscale()); // se esiste
+        fattura.setCodiceFiscaleEmittente(currentUser.getCodiceFiscale());
     
-        // --------------------------------------------------
-        // 5.2) Dati del Cliente
-        // --------------------------------------------------
+        // 10) DATI CLIENTE dal ‘incarico.getCliente()’
         String denominazioneCliente;
         if (cliente.getRagioneSociale() != null && !cliente.getRagioneSociale().trim().isEmpty()) {
             denominazioneCliente = cliente.getRagioneSociale();
         } else {
             denominazioneCliente = (cliente.getNome() + " " + cliente.getCognome()).trim();
         }
-    
         fattura.setNomeCliente(denominazioneCliente);
         fattura.setIndirizzoCliente(cliente.getIndirizzo());
         fattura.setCapCliente(cliente.getCap());
@@ -252,60 +202,46 @@ public class FatturaService {
         fattura.setPartitaIVACliente(cliente.getPartitaIva());
         fattura.setCodiceFiscaleCliente(cliente.getCodiceFiscale());
     
-        // CodiceSDI, PEC, Nazione (campo facoltativo, se presente nel cliente)
+        // CodiceSDI, PEC, etc. (facoltativi)
         fattura.setCodiceSDIDestinatario(cliente.getCodiceSDI());
         fattura.setPecDestinatario(cliente.getPec());
         fattura.setDenominazioneDestinatario(denominazioneCliente);
-        // Se non esiste, default "IT"
-        fattura.setNazioneDestinatario(
-            (cliente.getNazione() != null && !cliente.getNazione().isEmpty())
-                ? cliente.getNazione()
-                : "IT"
-        );
+        fattura.setNazioneDestinatario(cliente.getNazione() != null ? cliente.getNazione() : "IT");
     
-        // --------------------------------------------------
-        // 6) Assegnazione dei NUOVI CAMPI dal DTO
-        // --------------------------------------------------
-        fattura.setTipoDocumento(tipoDocumento);
-        fattura.setCausale(causale);
-        fattura.setCausalePagamento(causalePagamento);
+        // 11) NUOVI CAMPI dal DTO
+        fattura.setTipoDocumento(dto.getTipoDocumento());   // FATT, NDC
+        fattura.setCausale(dto.getCausale());
+        fattura.setCausalePagamento(dto.getCausalePagamento());
     
-        // Embeddable
-        fattura.setDatiBollo(datiBollo);
-        fattura.setDatiCassaPrevidenziale(datiCassa);
-        fattura.setDatiPagamento(datiPagamento);
+        fattura.setDatiBollo(dto.getDatiBollo());
+        fattura.setDatiCassaPrevidenziale(dto.getDatiCassaPrevidenziale());
+        fattura.setDatiPagamento(dto.getDatiPagamento());
     
-        // Documenti di riferimento
-        fattura.setDatiOrdineAcquisto(datiOrdineAcq);
-        fattura.setDatiContratto(datiContratto);
-        fattura.setDatiConvenzione(datiConvenzione);
-        fattura.setDatiRicezione(datiRicezione);
-        fattura.setDatiFattureCollegate(datiFattureColl);
+        fattura.setDatiOrdineAcquisto(dto.getDatiOrdineAcquisto());
+        fattura.setDatiContratto(dto.getDatiContratto());
+        fattura.setDatiConvenzione(dto.getDatiConvenzione());
+        fattura.setDatiRicezione(dto.getDatiRicezione());
+        fattura.setDatiFattureCollegate(dto.getDatiFattureCollegate());
     
-        // --------------------------------------------------
-        // 7) Salvataggio della Fattura
-        // --------------------------------------------------
+        // 12) SALVA FATTURA
         fatturaRepository.save(fattura);
     
-        // Segna l'ordine come fatturato
+        // 13) SEGNO L’ORDINE COME FATTURATO
         incarico.setFatturato(true);
         ordineRepository.save(incarico);
     
-        // Traccia operazione
+        // 14) LOG operazione
         Operazione operazione = new Operazione();
         operazione.setUser(currentUser);
         operazione.setEntita("Fattura");
         operazione.setTipo("Aggiunta");
-        operazione.setDescrizione(
-            "Nuova fattura creata: " + fattura.getNumeroFattura() + " per l'ordine " + incarico.getId()
-        );
+        operazione.setDescrizione("Nuova fattura creata: " + fattura.getNumeroFattura()
+            + " per l'ordine " + incarico.getId());
         operazione.setDataOperazione(LocalDateTime.now());
         operazioneRepository.save(operazione);
     
-        // --------------------------------------------------
-        // 8) Inserisci movimento in PrimaNota (opzionale)
-        // --------------------------------------------------
-        if (inserisciMovimento) {
+        // 15) EVENTUALE MOVIMENTO DI PRIMA NOTA
+        if (dto.isInserisciMovimento()) {
             PrimaNota primaNota = new PrimaNota();
             primaNota.setDataOperazione(fattura.getDataEmissione());
             primaNota.setFattura(fattura);
@@ -319,8 +255,7 @@ public class FatturaService {
     
         return fattura;
     }
-
-    private static final String API_FATTURA_ELETTRONICA_URL = "https://api.fatturazione.it/invio-fattura";
+        private static final String API_FATTURA_ELETTRONICA_URL = "https://api.fatturazione.it/invio-fattura";
         @Autowired
     private RestTemplate restTemplate;  // O un HttpClient a tua scelta
 
