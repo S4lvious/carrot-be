@@ -25,6 +25,10 @@ import com.itextpdf.layout.properties.UnitValue;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -255,58 +259,65 @@ public class FatturaService {
     
         return fattura;
     }
-        private static final String API_FATTURA_ELETTRONICA_URL = "https://api.fatturazione.it/invio-fattura";
+        private static final String API_FATTURA_ELETTRONICA_URL = "https://fattura-elettronica-api.it/ws2.0/test/fatture";
         @Autowired
     private RestTemplate restTemplate;  // O un HttpClient a tua scelta
 
 
-    @Transactional
-    public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
-        // 1) Costruisci il body JSON come una mappa o un DTO
-        Map<String, Object> jsonBody = costruisciJsonFattura(fattura);
+@Transactional
+public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
+    // 1) Costruisci il body JSON come una mappa o un DTO
+    Map<String, Object> jsonBody = costruisciJsonFattura(fattura);
 
-        // 2) Effettua la chiamata HTTP POST
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-            API_FATTURA_ELETTRONICA_URL,
-            jsonBody,
-            Map.class
-        );
+    // 2) Imposta gli headers
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "Basic cy5saWNjYXJkbzAyMkBnbWFpbC5jb206eFUzN21MbHJ4Zw==");
 
-        // 3) Gestione della risposta
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            Map<String, Object> responseBody = response.getBody();
+    HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(jsonBody, headers);
 
-            Object idApi = responseBody.get("id");
-            Object sdiIdentificativo = responseBody.get("sdi_identificativo");
-            Object sdiNomeFile = responseBody.get("sdi_nome_file");
-            Object sdiFattura = responseBody.get("sdi_fattura");
-            Object sdiStato = responseBody.get("sdi_stato");
-            Object sdiMessaggio = responseBody.get("sdi_messaggio");
+    // 3) Effettua la chiamata HTTP POST
+    ResponseEntity<Map> response = restTemplate.exchange(
+        API_FATTURA_ELETTRONICA_URL,
+        HttpMethod.POST,
+        requestEntity,
+        Map.class
+    );
 
-            // 4) Aggiorna i campi della fattura
-            fattura.setItalaID((idApi != null) ? idApi.toString() : null);
-            fattura.setSdiIdentificativo((sdiIdentificativo != null) ? sdiIdentificativo.toString() : null);
-            fattura.setSdiNomeFile((sdiNomeFile != null) ? sdiNomeFile.toString() : null);
-            fattura.setSdiFattura((sdiFattura != null) ? sdiFattura.toString() : null);
-            fattura.setSdiStato((sdiStato != null) ? sdiStato.toString() : null);
-            fattura.setSdiMessaggio((sdiMessaggio != null) ? sdiMessaggio.toString() : null);
+    // 4) Gestione della risposta
+    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+        Map<String, Object> responseBody = response.getBody();
 
-            // Esempio: se lo stato è "INVI", possiamo marcare la fattura come inviataAdE = true
-            if ("INVI".equals(fattura.getSdiStato())) {
-                fattura.setInviataAdE(true);
-            }
+        Object idApi = responseBody.get("id");
+        Object sdiIdentificativo = responseBody.get("sdi_identificativo");
+        Object sdiNomeFile = responseBody.get("sdi_nome_file");
+        Object sdiFattura = responseBody.get("sdi_fattura");
+        Object sdiStato = responseBody.get("sdi_stato");
+        Object sdiMessaggio = responseBody.get("sdi_messaggio");
 
-            // Salva la fattura aggiornata
-            fatturaRepository.save(fattura);
+        // 5) Aggiorna i campi della fattura
+        fattura.setItalaID((idApi != null) ? idApi.toString() : null);
+        fattura.setSdiIdentificativo((sdiIdentificativo != null) ? sdiIdentificativo.toString() : null);
+        fattura.setSdiNomeFile((sdiNomeFile != null) ? sdiNomeFile.toString() : null);
+        fattura.setSdiFattura((sdiFattura != null) ? sdiFattura.toString() : null);
+        fattura.setSdiStato((sdiStato != null) ? sdiStato.toString() : null);
+        fattura.setSdiMessaggio((sdiMessaggio != null) ? sdiMessaggio.toString() : null);
 
-        } else {
-            throw new IllegalStateException(
-                "Errore nell'invio della fattura: " + response.getStatusCode()
-            );
+        if ("INVI".equals(fattura.getSdiStato())) {
+            fattura.setInviataAdE(true);
         }
 
-        return fattura;
+        // 6) Salva la fattura aggiornata
+        fatturaRepository.save(fattura);
+
+    } else {
+        throw new IllegalStateException(
+            "Errore nell'invio della fattura: " + response.getStatusCode()
+        );
     }
+
+    return fattura;
+}
 
     /**
      * Costruisce il body JSON da inviare all'API esterna, mappando i campi della Fattura

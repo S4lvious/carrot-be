@@ -35,6 +35,17 @@ public class FatturaController {
         }
     }
 
+    @PostMapping("/send")
+    public ResponseEntity<?> sendInCloud(@RequestBody Fattura fatturarequest) {
+        try {
+            fatturaService.inviaFatturaAFornitoreEsterno(fatturarequest);
+            return ResponseEntity.ok(fatturaService.getAllFatture());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Errore nella generazione della fattura: " + e.getMessage());
+        }
+    }
+
+
     @PostMapping("/generaxml")
     public ResponseEntity<String> generaXml(@RequestBody Fattura fattura) {
         try {
