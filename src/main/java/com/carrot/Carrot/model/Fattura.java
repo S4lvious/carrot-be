@@ -148,7 +148,9 @@ public class Fattura {
     private String italaID;
     private String sdiIdentificativo;
     private String SdiNomeFile;
-    private String SdiFattura;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String sdiFattura;
     private String SdiStato;
     private String SdiMessaggio;
 

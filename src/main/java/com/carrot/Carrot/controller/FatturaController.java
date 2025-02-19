@@ -4,6 +4,8 @@ import com.carrot.Carrot.dto.FatturaCompletaDTO;
 import com.carrot.Carrot.dto.fatturarequest;
 import com.carrot.Carrot.model.Fattura;
 import com.carrot.Carrot.service.FatturaService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,37 @@ public class FatturaController {
             return ResponseEntity.badRequest().body("Errore nella generazione della fattura: " + e.getMessage());
         }
     }
+
+    @PostMapping("/webhook/notification")
+    public ResponseEntity<String> riceviNotificaFattura(
+            @RequestBody String body,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String tokenSalvato = "Bearer qwertyuiopASDFGHJKL1234567890abcXYZ";
+        if (authHeader != tokenSalvato) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token non valido");
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode json = objectMapper.readTree(body);
+
+            Long fatturaId = json.get("id").asLong();
+            String sdiStato = json.get("sdi_stato").asText();
+            String sdiMessaggio = json.has("sdi_messaggio") ? json.get("sdi_messaggio").asText() : "";
+            String partitaIva = json.has("partita_iva") ? json.get("partita_iva").asText() : null;
+
+            System.out.println("Notifica ricevuta per fattura ID: " + fatturaId);
+            System.out.println("Azienda: " + partitaIva + " - Stato SDI: " + sdiStato);
+
+            // ✅ Aggiorna il database per la giusta azienda
+            fatturaService.aggiornaFatturaPerAzienda(fatturaId, partitaIva, sdiStato, sdiMessaggio);
+
+            return ResponseEntity.ok("Notifica ricevuta con successo");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Errore nel parsing JSON");
+        }
+    }
+
 
     @PostMapping("/send")
     public ResponseEntity<?> sendInCloud(@RequestBody Fattura fatturarequest) {

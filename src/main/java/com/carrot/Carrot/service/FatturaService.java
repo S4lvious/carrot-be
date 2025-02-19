@@ -22,6 +22,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +64,10 @@ public class FatturaService {
 
     @Autowired
     private PrimaNotaRepository primaNotaRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
 
 
     // Metodo di supporto per ottenere l'utente corrente
@@ -320,6 +328,19 @@ public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
 
     return fattura;
 }
+
+    @Transactional
+    public void aggiornaFatturaPerAzienda(Long fatturaId, String partitaIva, String stato, String messaggio) {
+        Query query = entityManager.createQuery(
+            "UPDATE Fattura f SET f.SdiStato = :stato, f.SdiMessaggio = :messaggio " +
+            "WHERE f.italaID = :id AND f.partita_iva_emittente = :partitaIva"
+        );
+        query.setParameter("stato", stato);
+        query.setParameter("messaggio", messaggio);
+        query.setParameter("id", fatturaId);
+        query.setParameter("partitaIva", partitaIva);
+        query.executeUpdate();
+    }
 
     /**
      * Costruisce il body JSON da inviare all'API esterna, mappando i campi della Fattura

@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/stripe-webhook").permitAll()
                 .requestMatchers("/stripe-webhook/**").permitAll()
+                .requestMatchers("/api/fatture/webhook/**").permitAll()
 
                 .anyRequest().authenticated()
             )
