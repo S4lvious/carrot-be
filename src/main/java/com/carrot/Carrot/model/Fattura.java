@@ -52,7 +52,7 @@ public class Fattura {
     @Column(name = "applicare_ritenuta", nullable = false)
     private boolean applicareRitenuta;
 
-    // Questa è la percentuale di ritenuta (es. 20.00 se è il 20%)
+    // Percentuale di ritenuta (es. 20.00 per il 20%)
     @Column(name = "ritenuta_acconto", precision = 5, scale = 2)
     private BigDecimal ritenutaAcconto;
 
@@ -136,14 +136,15 @@ public class Fattura {
     @Column(name = "causale_pagamento")
     private String causalePagamento;
 
-    // Dati Bollo
+    // Embeddable per Dati Bollo
     @Embedded
     private DatiBollo datiBollo;
 
-    // Dati Cassa Previdenziale
+    // Embeddable per Dati Cassa Previdenziale
     @Embedded
     private DatiCassaPrevidenziale datiCassaPrevidenziale;
 
+    // Altri campi per SDI
     private String italaID;
     private String sdiIdentificativo;
     private String SdiNomeFile;
@@ -151,7 +152,7 @@ public class Fattura {
     private String SdiStato;
     private String SdiMessaggio;
 
-    // Documenti di riferimento (Ordine, Contratto, Convenzione, Ricezione, Fatture Collegate)
+    // Documenti di riferimento
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "idDocumento", column = @Column(name = "id_documento_ordine_acquisto")),
@@ -205,40 +206,4 @@ public class Fattura {
     // Dati Pagamento
     @Embedded
     private DatiPagamento datiPagamento;
-
-    // Dati Bollo (presi dall'ordine)
-    @Column(name = "bollo_virtuale")
-    private Boolean bolloVirtuale;
-
-    @Column(name = "importo_bollo", precision = 10, scale = 2)
-    private BigDecimal importoBollo;
-
-    // Dati Cassa Previdenziale
-    @Column(name = "tipo_cassa")
-    private String tipoCassa;
-    
-    @Column(name = "al_cassa")
-    private String alCassa;
-    
-    @Column(name = "importo_contributo_cassa", precision = 10, scale = 2)
-    private BigDecimal importoContributoCassa;
-    
-    @Column(name = "imponibile_cassa", precision = 10, scale = 2)
-    private BigDecimal imponibileCassa;
-    
-    @Column(name = "aliquota_iva_cassa", precision = 5, scale = 2)
-    private BigDecimal aliquotaIVACassa;
-    
-    @Column(name = "natura_cassa")
-    private String naturaCassa;
-    
-    @Column(name = "ritenuta_cassa")
-    private Boolean ritenutaCassa;
-
-    
-    // Dati Pagamento
-    @Enumerated(EnumType.STRING)
-    @Column(name = "condizioni_pagamento", nullable = false)
-    private CondizioniPagamento condizioniPagamento;
-    // Dettagli dell'ordine
 }
