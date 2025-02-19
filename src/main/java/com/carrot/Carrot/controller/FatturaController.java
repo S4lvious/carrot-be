@@ -7,6 +7,7 @@ import com.carrot.Carrot.service.FatturaService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,10 @@ import javax.xml.bind.JAXBException;
 @RestController
 @RequestMapping("/api/fatture")
 public class FatturaController {
+
+
+    @Value("${webhook.token}")
+    String tokenSalvato;
     private final FatturaService fatturaService;
 
     public FatturaController(FatturaService fatturaService) {
@@ -37,13 +42,13 @@ public class FatturaController {
         }
     }
 
+
+
     @PostMapping("/webhook/notification")
     public ResponseEntity<String> riceviNotificaFattura(
             @RequestBody String body,
             @RequestHeader("Authorization") String authHeader) {
-
-        String tokenSalvato = "Bearer qwertyuiopASDFGHJKL1234567890abcXYZ";
-        if (authHeader != tokenSalvato) {
+        if (!tokenSalvato.equals(authHeader)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token non valido");
         }
         try {

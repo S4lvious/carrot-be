@@ -22,6 +22,12 @@ spec:
           value: "root"
         - name: DB_PASSWORD
           value: "password"
+        - name: WEBHOOK_TOKEN
+          value: Bearer qwertyuiopASDFGHJKL1234567890abcXYZ
+        - name: FATTURA_API_URL
+          value: https://fattura-elettronica-api.it/ws2.0/test/fatture
+        - name: FATTURA_API_AUTH
+          value: Basic cy5saWNjYXJkbzAyMkBnbWFpbC5jb206eFUzN21MbHJ4Zw==
         ports:
         - containerPort: 8080
         resources:

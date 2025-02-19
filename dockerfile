@@ -17,10 +17,15 @@ WORKDIR /app
 # Copia il JAR compilato dal builder (assicurati che il nome corrisponda a quello generato)
 COPY --from=builder /app/target/Carrot-0.0.1-SNAPSHOT.jar app.jar
 
-# Variabili d'ambiente per la connessione al database (modifica se necessario)
+# Variabili d'ambiente per la connessione al database
 ENV DB_URL=jdbc:mysql://db:3306/carrotpmi
 ENV DB_USER=root
 ENV DB_PASSWORD=password
+
+# ➕ Aggiunta delle variabili per Fattura Elettronica API
+ENV WEBHOOK_TOKEN="Bearer qwertyuiopASDFGHJKL1234567890abcXYZ"
+ENV FATTURA_API_URL=https://fattura-elettronica-api.it/ws2.0/test/fatture
+ENV FATTURA_API_AUTH="Basic cy5saWNjYXJkbzAyMkBnbWFpbC5jb206eFUzN21MbHJ4Zw=="
 
 # Esponi la porta dell'applicazione
 EXPOSE 8080

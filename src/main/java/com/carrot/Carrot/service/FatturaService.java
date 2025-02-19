@@ -29,6 +29,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -67,6 +68,13 @@ public class FatturaService {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Value("${fattura.api.url}")
+    private String apiFatturaElettronicaUrl;
+
+    @Value("${fattura.api.auth}")
+    private String apiAuthHeader;
+
 
 
 
@@ -267,7 +275,6 @@ public class FatturaService {
     
         return fattura;
     }
-        private static final String API_FATTURA_ELETTRONICA_URL = "https://fattura-elettronica-api.it/ws2.0/test/fatture";
         @Autowired
     private RestTemplate restTemplate;  // O un HttpClient a tua scelta
 
@@ -282,13 +289,13 @@ public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
     // 2) Imposta gli headers
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
-    headers.set("Authorization", "Basic cy5saWNjYXJkbzAyMkBnbWFpbC5jb206eFUzN21MbHJ4Zw==");
+    headers.set("Authorization",apiAuthHeader);
 
     HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(jsonBody, headers);
 
     // 3) Effettua la chiamata HTTP POST
     ResponseEntity<Map> response = restTemplate.exchange(
-        API_FATTURA_ELETTRONICA_URL,
+        apiFatturaElettronicaUrl,
         HttpMethod.POST,
         requestEntity,
         Map.class
