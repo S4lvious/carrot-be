@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
@@ -46,32 +47,37 @@ public class FatturaController {
 
     @PostMapping("/webhook/notification")
     public ResponseEntity<String> riceviNotificaFattura(
-            @RequestBody String body,
+            @RequestBody List<Map<String, Object>> bodyList,
             @RequestHeader("Authorization") String authHeader) {
+
+        // ✅ Controllo autenticazione
         if (!tokenSalvato.equals(authHeader)) {
+            System.err.println("🔴 Tentativo di accesso con token non valido: " + authHeader);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token non valido");
         }
+
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode json = objectMapper.readTree(body);
+            for (Map<String, Object> body : bodyList) {
+                // ✅ Verifica e parsing dei dati
+                Long fatturaId = Long.parseLong(body.get("id").toString());
+                String sdiStato = body.getOrDefault("sdi_stato", "UNKNOWN").toString();
+                String sdiMessaggio = body.getOrDefault("sdi_messaggio", "").toString();
+                String partitaIva = body.getOrDefault("partita_iva", "").toString();
 
-            Long fatturaId = json.get("id").asLong();
-            String sdiStato = json.get("sdi_stato").asText();
-            String sdiMessaggio = json.has("sdi_messaggio") ? json.get("sdi_messaggio").asText() : "";
-            String partitaIva = json.has("partita_iva") ? json.get("partita_iva").asText() : null;
+                System.out.println("📩 Notifica ricevuta per fattura ID: " + fatturaId);
+                System.out.println("🏢 Azienda: " + partitaIva + " - Stato SDI: " + sdiStato);
 
-            System.out.println("Notifica ricevuta per fattura ID: " + fatturaId);
-            System.out.println("Azienda: " + partitaIva + " - Stato SDI: " + sdiStato);
+                // ✅ Aggiorna il database per la giusta azienda
+                fatturaService.aggiornaFatturaPerAzienda(fatturaId, partitaIva, sdiStato, sdiMessaggio);
+            }
 
-            // ✅ Aggiorna il database per la giusta azienda
-            fatturaService.aggiornaFatturaPerAzienda(fatturaId, partitaIva, sdiStato, sdiMessaggio);
+            return ResponseEntity.ok("✅ Notifica ricevuta con successo");
 
-            return ResponseEntity.ok("Notifica ricevuta con successo");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Errore nel parsing JSON");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Errore nel parsing JSON: " + e.getMessage());
         }
     }
-
 
     @PostMapping("/send")
     public ResponseEntity<?> sendInCloud(@RequestBody Fattura fatturarequest) {
