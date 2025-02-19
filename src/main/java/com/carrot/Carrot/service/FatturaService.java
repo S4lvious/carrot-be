@@ -25,8 +25,10 @@ import com.itextpdf.layout.properties.UnitValue;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,6 +66,8 @@ public class FatturaService {
                                         .getPrincipal();
         return userDetails.getUser();
     }
+
+    
 
     @Transactional
     public Fattura generaFatturaCompleta(FatturaCompletaDTO dto) {
@@ -314,6 +318,250 @@ public class FatturaService {
         }
     
         return fattura;
+    }
+
+    private static final String API_FATTURA_ELETTRONICA_URL = "https://api.fatturazione.it/invio-fattura";
+        @Autowired
+    private RestTemplate restTemplate;  // O un HttpClient a tua scelta
+
+
+    @Transactional
+    public Fattura inviaFatturaAFornitoreEsterno(Fattura fattura) {
+        // 1) Costruisci il body JSON come una mappa o un DTO
+        Map<String, Object> jsonBody = costruisciJsonFattura(fattura);
+
+        // 2) Effettua la chiamata HTTP POST
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+            API_FATTURA_ELETTRONICA_URL,
+            jsonBody,
+            Map.class
+        );
+
+        // 3) Gestione della risposta
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            Map<String, Object> responseBody = response.getBody();
+
+            Object idApi = responseBody.get("id");
+            Object sdiIdentificativo = responseBody.get("sdi_identificativo");
+            Object sdiNomeFile = responseBody.get("sdi_nome_file");
+            Object sdiFattura = responseBody.get("sdi_fattura");
+            Object sdiStato = responseBody.get("sdi_stato");
+            Object sdiMessaggio = responseBody.get("sdi_messaggio");
+
+            // 4) Aggiorna i campi della fattura
+            fattura.setItalaID((idApi != null) ? idApi.toString() : null);
+            fattura.setSdiIdentificativo((sdiIdentificativo != null) ? sdiIdentificativo.toString() : null);
+            fattura.setSdiNomeFile((sdiNomeFile != null) ? sdiNomeFile.toString() : null);
+            fattura.setSdiFattura((sdiFattura != null) ? sdiFattura.toString() : null);
+            fattura.setSdiStato((sdiStato != null) ? sdiStato.toString() : null);
+            fattura.setSdiMessaggio((sdiMessaggio != null) ? sdiMessaggio.toString() : null);
+
+            // Esempio: se lo stato è "INVI", possiamo marcare la fattura come inviataAdE = true
+            if ("INVI".equals(fattura.getSdiStato())) {
+                fattura.setInviataAdE(true);
+            }
+
+            // Salva la fattura aggiornata
+            fatturaRepository.save(fattura);
+
+        } else {
+            throw new IllegalStateException(
+                "Errore nell'invio della fattura: " + response.getStatusCode()
+            );
+        }
+
+        return fattura;
+    }
+
+    /**
+     * Costruisce il body JSON da inviare all'API esterna, mappando i campi della Fattura
+     * secondo la specifica fornita.
+     */
+    private Map<String, Object> costruisciJsonFattura(Fattura fattura) {
+        // Esempio di mappatura "manuale" in una struttura Map:
+        Map<String, Object> root = new HashMap<>();
+
+        // 1) piva_mittente: la p.IVA dell'emittente
+        root.put("piva_mittente", fattura.getPartitaIVAEmittente());
+
+        // 2) Destinatario
+        Map<String, Object> destinatario = new HashMap<>();
+        destinatario.put("CodiceSDI", (fattura.getCodiceSDIDestinatario() != null)
+            ? fattura.getCodiceSDIDestinatario() : "0000000");
+        destinatario.put("PEC", fattura.getPecDestinatario());
+        destinatario.put("PartitaIVA", (fattura.getPartitaIVACliente() != null)
+            ? fattura.getPartitaIVACliente() : "00000000000");
+        destinatario.put("CodiceFiscale", (fattura.getCodiceFiscaleCliente() != null)
+            ? fattura.getCodiceFiscaleCliente() : "00000000000");
+        destinatario.put("Denominazione", fattura.getDenominazioneDestinatario());
+        destinatario.put("Indirizzo", fattura.getIndirizzoCliente());
+        destinatario.put("CAP", fattura.getCapCliente());
+        destinatario.put("Comune", fattura.getCittaCliente());
+        destinatario.put("Provincia", fattura.getProvinciaCliente());
+        destinatario.put("Nazione", (fattura.getNazioneDestinatario() != null)
+            ? fattura.getNazioneDestinatario() : "IT");
+        root.put("destinatario", destinatario);
+
+        // 3) documento
+        Map<String, Object> documento = new HashMap<>();
+        documento.put("tipo", fattura.getTipoDocumento());            // FATT o NDC
+        documento.put("Data", fattura.getDataEmissione().toString()); // es. "2023-10-03"
+        documento.put("Numero", fattura.getNumeroFattura());
+        documento.put("Causale", fattura.getCausale());
+        documento.put("ImportoRitenuta", fattura.getImportoRitenuta().toPlainString());
+        documento.put("AliquotaRitenuta", (fattura.getRitenutaAcconto() != null)
+            ? fattura.getRitenutaAcconto().toPlainString()
+            : "0.00");
+        documento.put("CausalePagamento", fattura.getCausalePagamento());
+
+        // DatiBollo
+        Map<String, Object> datiBollo = new HashMap<>();
+        datiBollo.put("BolloVirtuale", (fattura.getDatiBollo() != null && Boolean.TRUE.equals(fattura.getDatiBollo().getBolloVirtuale()))
+            ? "SI" : "NO");
+        datiBollo.put("ImportoBollo", (fattura.getDatiBollo() != null)
+            ? fattura.getDatiBollo().getImportoBollo().toPlainString()
+            : "0.00");
+        documento.put("DatiBollo", datiBollo);
+
+        // DatiCassaPrevidenziale
+        Map<String, Object> datiCassaMap = new HashMap<>();
+        if (fattura.getDatiCassaPrevidenziale() != null) {
+            datiCassaMap.put("TipoCassa", fattura.getDatiCassaPrevidenziale().getTipoCassa());
+            datiCassaMap.put("AlCassa", fattura.getDatiCassaPrevidenziale().getAlCassa());
+            datiCassaMap.put("ImportoContributoCassa", (fattura.getDatiCassaPrevidenziale().getImportoContributoCassa() != null)
+                ? fattura.getDatiCassaPrevidenziale().getImportoContributoCassa().toPlainString() : "");
+            datiCassaMap.put("ImponibileCassa", (fattura.getDatiCassaPrevidenziale().getImponibileCassa() != null)
+                ? fattura.getDatiCassaPrevidenziale().getImponibileCassa().toPlainString() : "");
+            datiCassaMap.put("AliquotaIVA", (fattura.getDatiCassaPrevidenziale().getAliquotaIVACassa() != null)
+                ? fattura.getDatiCassaPrevidenziale().getAliquotaIVACassa().toPlainString() : "");
+            datiCassaMap.put("Natura", fattura.getDatiCassaPrevidenziale().getNatura());
+            datiCassaMap.put("Ritenuta", (Boolean.TRUE.equals(fattura.getDatiCassaPrevidenziale().getRitenuta()))
+                ? "SI" : "NO");
+        } else {
+            // campi vuoti
+            datiCassaMap.put("TipoCassa", "");
+            datiCassaMap.put("AlCassa", "");
+            datiCassaMap.put("ImportoContributoCassa", "");
+            datiCassaMap.put("ImponibileCassa", "");
+            datiCassaMap.put("AliquotaIVA", "");
+            datiCassaMap.put("Natura", "");
+            datiCassaMap.put("Ritenuta", "NO");
+        }
+        documento.put("DatiCassaPrevidenziale", datiCassaMap);
+
+        // Dati Ordine/Contratto/Convenzione/Ricezione/FattureCollegate
+        documento.put("DatiOrdineAcquisto", mappaDocumentoRiferimento(fattura.getDatiOrdineAcquisto()));
+        documento.put("DatiContratto", mappaDocumentoRiferimento(fattura.getDatiContratto()));
+        documento.put("DatiConvenzione", mappaDocumentoRiferimento(fattura.getDatiConvenzione()));
+        documento.put("DatiRicezione", mappaDocumentoRiferimento(fattura.getDatiRicezione()));
+        documento.put("DatiFattureCollegate", mappaDocumentoRiferimento(fattura.getDatiFattureCollegate()));
+
+        // Dati Pagamento
+        Map<String, Object> datiPagMap = new HashMap<>();
+        if (fattura.getDatiPagamento() != null) {
+            datiPagMap.put("CondizioniPagamento", fattura.getDatiPagamento().getCondizioniPagamento());
+            Map<String, Object> dettPag = new HashMap<>();
+            DettaglioPagamento dp = fattura.getDatiPagamento().getDettaglioPagamento();
+            if (dp != null) {
+                dettPag.put("Beneficiario", dp.getBeneficiario());
+                dettPag.put("ModalitaPagamento", dp.getModalitaPagamento());
+                dettPag.put("DataScadenzaPagamento", (dp.getDataScadenzaPagamento() != null)
+                    ? dp.getDataScadenzaPagamento().toString()
+                    : "");
+                dettPag.put("IBAN", dp.getIban());
+                dettPag.put("ImportoPagamento", (dp.getImportoPagamento() != null)
+                    ? dp.getImportoPagamento().toPlainString()
+                    : "0.00");
+                dettPag.put("IstitutoFinanziario", dp.getIstitutoFinanziario());
+            }
+            datiPagMap.put("DettaglioPagamento", dettPag);
+
+        } else {
+            // default
+            datiPagMap.put("CondizioniPagamento", "TP02");
+            Map<String, Object> dettPag = new HashMap<>();
+            dettPag.put("Beneficiario", "");
+            dettPag.put("ModalitaPagamento", "MP01");
+            dettPag.put("DataScadenzaPagamento", "");
+            dettPag.put("IBAN", "");
+            dettPag.put("ImportoPagamento", "0.00");
+            dettPag.put("IstitutoFinanziario", "");
+            datiPagMap.put("DettaglioPagamento", dettPag);
+        }
+        documento.put("DatiPagamento", datiPagMap);
+
+        root.put("documento", documento);
+
+        // 4) righe
+        List<Map<String, Object>> righeList = new ArrayList<>();
+        // Genera righe da ordini o se la fattura avesse un meccanismo di righe interne
+        // Es: prendiamo dal "Ordine" con i suoi DettagliOrdine
+        if (fattura.getOrdine() != null && fattura.getOrdine().getDettagliOrdine() != null) {
+            for (DettaglioOrdine det : fattura.getOrdine().getDettagliOrdine()) {
+                Map<String, Object> riga = new HashMap<>();
+                Prodotto prod = det.getProdotto();
+                // Descrizione => usiamo nome del prodotto
+                riga.put("Descrizione", (prod.getDescrizione() != null && !prod.getDescrizione().isEmpty())
+                    ? prod.getDescrizione()
+                    : prod.getNome());
+                // PrezzoUnitario => det.getPrezzoUnitario()
+                riga.put("PrezzoUnitario", det.getPrezzoUnitario().toPlainString());
+                // AliquotaIVA => es. 22
+                riga.put("AliquotaIVA", prod.getAliquotaIVA().intValue()); // se BigDecimal => converti int
+                // Quantita => det.getQuantita()
+                riga.put("Quantita", det.getQuantita());
+
+                // ScontoMaggiorazione => se non lo gestisci, metti default
+                Map<String, Object> scontoMap = new HashMap<>();
+                scontoMap.put("Tipo", "SC");
+                scontoMap.put("Percentuale", "");
+                scontoMap.put("Importo", "");
+                riga.put("ScontoMaggiorazione", scontoMap);
+
+                // Natura => se non c'è => vuoto
+                riga.put("Natura", (prod.getNatura() != null) ? prod.getNatura() : "");
+
+                // CodiceArticolo => se usi codici (prod.getCodiceTipo, prod.getCodiceValore)
+                Map<String, Object> codiceArticolo = new HashMap<>();
+                codiceArticolo.put("CodiceTipo", (prod.getCodiceTipo() != null) ? prod.getCodiceTipo() : "");
+                codiceArticolo.put("CodiceValore", (prod.getCodiceValore() != null) ? prod.getCodiceValore() : "");
+                riga.put("CodiceArticolo", codiceArticolo);
+
+                // UnitaMisura => prod.getUnitaMisura()?
+                riga.put("UnitaMisura", (prod.getUnitaMisura() != null) ? prod.getUnitaMisura() : "");
+
+                // EsigibilitaIVA => se gestisci, altrimenti blank
+                riga.put("EsigibilitaIVA", (prod.getEsigibilitaIVA() != null) ? prod.getEsigibilitaIVA() : "");
+
+                righeList.add(riga);
+            }
+        }
+        root.put("righe", righeList);
+
+        return root;
+    }
+
+    /**
+     * Metodo di comodo per creare la mappa dei dati di riferimento (ordine, contratto, ecc.).
+     */
+    private Map<String, Object> mappaDocumentoRiferimento(DocumentoRiferimento docRef) {
+        Map<String, Object> map = new HashMap<>();
+        if (docRef != null) {
+            map.put("IdDocumento", docRef.getIdDocumento());
+            // Data => se non null, in formato "yyyy-mm-dd"
+            map.put("Data", (docRef.getData() != null) ? docRef.getData().toString() : "");
+            map.put("CodiceCommessaConvenzione", docRef.getCodiceCommessaConvenzione());
+            map.put("CodiceCUP", docRef.getCodiceCUP());
+            map.put("CodiceCIG", docRef.getCodiceCIG());
+        } else {
+            // Se non esiste => campi vuoti
+            map.put("IdDocumento", "");
+            map.put("Data", "");
+            map.put("CodiceCommessaConvenzione", "");
+            map.put("CodiceCUP", "");
+            map.put("CodiceCIG", "");
+        }
+        return map;
     }
     
 

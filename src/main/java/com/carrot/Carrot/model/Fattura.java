@@ -144,6 +144,13 @@ public class Fattura {
     @Embedded
     private DatiCassaPrevidenziale datiCassaPrevidenziale;
 
+    private String italaID;
+    private String sdiIdentificativo;
+    private String SdiNomeFile;
+    private String SdiFattura;
+    private String SdiStato;
+    private String SdiMessaggio;
+
     // Documenti di riferimento (Ordine, Contratto, Convenzione, Ricezione, Fatture Collegate)
     @Embedded
     @AttributeOverrides({
