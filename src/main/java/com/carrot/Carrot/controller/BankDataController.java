@@ -90,79 +90,82 @@ public class BankDataController {
         return resp;
     }
 
-@GetMapping("/redirect")
-public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
-
-    // 1) Recupero l'utente in base a goCardlessRef
-    User utente = utenteRepository.findByGoCardlessRef(ref)
-            .orElseThrow(() -> new RuntimeException("Utente non trovato per requisitionId=" + ref));
-
-    // 2) Chiamo GoCardless per sapere i conti associati
-    RequisitionDetails details = bankDataService.getRequisitionDetails(utente.getRequisitionId());
-    List<String> accountIds = details.getAccounts();
-
-    // 3) Per ogni accountId, salvo o aggiorno nella tabella 'utente_bank_account'
-    if (accountIds != null && !accountIds.isEmpty()) {
-        for (String accountId : accountIds) {
-            Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
-            if (existing.isEmpty()) {
-                BankAccountsUser uba = new BankAccountsUser();
-                uba.setUtente(utente);
-                uba.setBankAccountId(accountId);
-                bankAccountRepository.save(uba);
-            }
-        }
-    }
-
-    if (accountIds != null) {
-        for (String accountId : accountIds) {
-            try {
-                var accountDetails = bankDataService.getAccountDetails(accountId);
-                Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
-                if (!existing.isEmpty()) {
-                    BankAccountsUser bankAccount = existing.get();
-                    bankAccount.setIban(accountDetails.getAccount().getIban());
-                    bankAccount.setOwnerName(accountDetails.getAccount().getOwnerName());
-                    bankAccount.setCurrency(accountDetails.getAccount().getCurrency());
-                    bankAccount.setAccountName(accountDetails.getAccount().getProduct());
-                    bankAccountRepository.save(bankAccount);
-                }
+    @GetMapping("/redirect")
+    public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
     
-                var txResp = bankDataService.getTransactions(accountId);
-                var booked = txResp.getTransactions().getBooked();  // movimenti contabilizzati
-                if (booked != null) {
-                    booked.forEach(tx -> {
-                        if (!primaNotaRepository.existsByBankTransactionId(tx.getTransactionId())) {
-                            PrimaNota pn = new PrimaNota();
-                            pn.setUser(utente);
-                            pn.setBankTransactionId(tx.getTransactionId());
-                            pn.setNome(tx.getRemittanceInformationUnstructured());
-                            
-                            BigDecimal importo = new BigDecimal(tx.getTransactionAmount().getAmount());
-                            pn.setImporto(importo);
-                            
-                            // Imposta il tipo di movimento
-                            pn.setTipoMovimento(importo.compareTo(BigDecimal.ZERO) < 0 ? TipoMovimento.USCITA : TipoMovimento.ENTRATA);
-                        
-                            if (tx.getBookingDate() != null) {
-                                pn.setDataOperazione(LocalDate.parse(tx.getBookingDate()));
-                            }
-                        
-                            primaNotaRepository.save(pn);
-                        }
-                    });
+        // 1) Recupero l'utente in base a goCardlessRef
+        User utente = utenteRepository.findByGoCardlessRef(ref)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato per goCardlessRef=" + ref));
+    
+        // 2) Chiamo GoCardless per sapere i conti associati
+        RequisitionDetails details = bankDataService.getRequisitionDetails(utente.getRequisitionId());
+        List<String> accountIds = details.getAccounts();
+    
+        // 3) Per ogni accountId, salvo o aggiorno nella tabella 'utente_bank_account'
+        if (accountIds != null && !accountIds.isEmpty()) {
+            for (String accountId : accountIds) {
+                Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
+                if (existing.isEmpty()) {
+                    BankAccountsUser uba = new BankAccountsUser();
+                    uba.setUtente(utente);
+                    uba.setBankAccountId(accountId);
+                    bankAccountRepository.save(uba);
                 }
-            } catch (HttpClientErrorException.Forbidden ex) {
-                // Se per questo account otteniamo 403 Forbidden, lo logghiamo e continuiamo con il prossimo account
-                System.err.println("Accesso negato per l'account " + accountId + ": " + ex.getMessage());
             }
         }
+    
+        // 4) Per ogni accountId, aggiorno i dettagli del conto e salvo le transazioni
+        if (accountIds != null) {
+            for (String accountId : accountIds) {
+                try {
+                    // Recupera i dettagli del conto
+                    var accountDetails = bankDataService.getAccountDetails(accountId);
+                    Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
+                    if (existing.isPresent()) {
+                        BankAccountsUser bankAccount = existing.get();
+                        bankAccount.setIban(accountDetails.getAccount().getIban());
+                        bankAccount.setOwnerName(accountDetails.getAccount().getOwnerName());
+                        bankAccount.setCurrency(accountDetails.getAccount().getCurrency());
+                        bankAccount.setAccountName(accountDetails.getAccount().getProduct());
+                        bankAccountRepository.save(bankAccount);
+                    }
+        
+                    // Recupera le transazioni per il conto
+                    var txResp = bankDataService.getTransactions(accountId);
+                    var booked = txResp.getTransactions().getBooked();  // movimenti contabilizzati
+                    if (booked != null) {
+                        booked.forEach(tx -> {
+                            if (!primaNotaRepository.existsByBankTransactionId(tx.getTransactionId())) {
+                                PrimaNota pn = new PrimaNota();
+                                pn.setUser(utente);
+                                pn.setBankTransactionId(tx.getTransactionId());
+                                pn.setNome(tx.getRemittanceInformationUnstructured());
+                                
+                                BigDecimal importo = new BigDecimal(tx.getTransactionAmount().getAmount());
+                                pn.setImporto(importo);
+                                
+                                // Imposta il tipo di movimento in base al segno dell'importo
+                                pn.setTipoMovimento(importo.compareTo(BigDecimal.ZERO) < 0 ? TipoMovimento.USCITA : TipoMovimento.ENTRATA);
+                            
+                                if (tx.getBookingDate() != null) {
+                                    pn.setDataOperazione(LocalDate.parse(tx.getBookingDate()));
+                                }
+                            
+                                primaNotaRepository.save(pn);
+                            }
+                        });
+                    }
+                } catch (HttpClientErrorException ex) {
+                    System.err.println("Accesso negato per l'account " + accountId + ": " + ex.getMessage());
+                }
+            }
+        }
+    
+        // 5) Redirect finale al front-end della contabilità
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("https://app.powerwebsoftware.it/contabilita"))
+                .build();
     }
-
-    return ResponseEntity.status(HttpStatus.FOUND)
-            .location(URI.create("https://app.powerwebsoftware.it/contabilita"))
-            .build();
-}
 
 
 }
