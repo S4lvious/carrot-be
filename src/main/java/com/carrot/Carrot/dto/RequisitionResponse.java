@@ -6,10 +6,9 @@ import lombok.Data;
 public class RequisitionResponse {
     private String id;
     private String redirect;
-    private RequisitionStatus status;
+    private String status;
     private String link;
     private String agreement;
-    // ... e così via
 
     @Data
     public static class RequisitionStatus {
