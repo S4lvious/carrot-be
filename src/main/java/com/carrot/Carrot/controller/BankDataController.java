@@ -83,20 +83,21 @@ public class BankDataController {
 
         // Salvo il requisitionId sull'utente
         utente.setRequisitionId(resp.getId());
+        utente.setGoCardlessRef(req.getReference());
         utenteRepository.save(utente);
 
         return resp;
     }
 
     @GetMapping("/redirect")
-    public ResponseEntity<String> handleRedirect(@RequestParam("id") String requisitionId) {
+    public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
 
         // 1) Recupero l'utente in base a requisitionId
-        User utente = utenteRepository.findByRequisitionId(requisitionId)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato per requisitionId=" + requisitionId));
+        User utente = utenteRepository.findByGoCardlessRef(ref)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato per requisitionId=" + ref));
 
         // 2) Chiamo GoCardless per sapere i conti associati
-        RequisitionDetails details = bankDataService.getRequisitionDetails(requisitionId);
+        RequisitionDetails details = bankDataService.getRequisitionDetails(utente.getRequisitionId());
         List<String> accountIds = details.getAccounts();
 
         // 3) Per ogni accountId, salvo o aggiorno nella tabella 'utente_bank_account'

@@ -74,6 +74,9 @@ public class User {
 
     private String requisitionId;
 
+    private String goCardlessRef;
+
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private Subscription subscription; // Collega la sottoscrizione dell'utente
