@@ -31,4 +31,7 @@ public interface PrimaNotaRepository extends JpaRepository<PrimaNota, Long> {
 
     // ✅ Ottenere operazione specifica di un utente
     Optional<PrimaNota> findByIdAndUserId(Long id, Long userId);
+
+    boolean existsByBankTransactionId(String bankTransactionId);
+
 }

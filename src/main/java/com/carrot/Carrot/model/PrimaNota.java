@@ -55,4 +55,7 @@ public class PrimaNota {
     
     @Column(name = "incarico_id", nullable = true)
     private Long incaricoId;  // Se l’operazione
+
+    private String bankTransactionId; 
+
 }

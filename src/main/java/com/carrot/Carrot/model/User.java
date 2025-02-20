@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -71,12 +72,18 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.USER; // Ruolo dell'utente
 
+    private String requisitionId;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private Subscription subscription; // Collega la sottoscrizione dell'utente
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BankAccountsUser> bankAccounts;
+
 
     public boolean isAzienda() {
         return ragioneSociale != null && !ragioneSociale.trim().isEmpty();
