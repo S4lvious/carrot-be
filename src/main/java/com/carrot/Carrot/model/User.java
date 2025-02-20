@@ -85,6 +85,7 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<BankAccountsUser> bankAccounts;
 
 

@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Getter
 @Setter
@@ -23,6 +25,7 @@ public class BankAccountsUser {
     // Relazione con l'utente
     @ManyToOne
     @JoinColumn(name = "utente_id")
+    @JsonBackReference
     private User utente;
 
     // L'ID del conto restituito dalle API di GoCardless (Account ID)
