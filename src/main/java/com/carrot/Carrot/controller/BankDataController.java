@@ -90,6 +90,12 @@ public class BankDataController {
         return resp;
     }
 
+    @PostMapping("/syncData") 
+    public ResponseEntity<TransactionsResponse> handleSync(@RequestBody String accountId) {
+        return ResponseEntity.ok(this.bankDataService.getTransactions(accountId));  
+
+    }
+
     @GetMapping("/redirect")
     public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
     
