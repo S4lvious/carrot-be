@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/stripe-webhook").permitAll()
                 .requestMatchers("/stripe-webhook/**").permitAll()
                 .requestMatchers("/api/fatture/webhook/**").permitAll()
+                .requestMatchers("/api/bank/redirect").permitAll()
 
                 .anyRequest().authenticated()
             )

@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -88,7 +89,7 @@ public class BankDataController {
     }
 
     @GetMapping("/redirect")
-    public ResponseEntity<String> handleRedirect(@RequestParam("requisition_id") String requisitionId) {
+    public ResponseEntity<String> handleRedirect(@RequestParam("ref") String requisitionId) {
 
         // 1) Recupero l'utente in base a requisitionId
         User utente = utenteRepository.findByRequisitionId(requisitionId)
@@ -142,8 +143,9 @@ public class BankDataController {
                 }
             }
         }
-
-        return ResponseEntity.ok("Conti e transazioni salvati con successo!");
+        return ResponseEntity.status(HttpStatus.FOUND)
+        .location(URI.create("https://app.powerwebsoftware.it/contabilita"))
+        .build();
     }
 }
 
