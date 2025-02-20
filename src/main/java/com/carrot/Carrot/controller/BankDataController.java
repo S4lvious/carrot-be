@@ -1,6 +1,7 @@
 package com.carrot.Carrot.controller;
 
 import com.carrot.Carrot.dto.*;
+import com.carrot.Carrot.enumerator.TipoMovimento;
 import com.carrot.Carrot.model.BankAccountsUser;
 import com.carrot.Carrot.model.PrimaNota;
 import com.carrot.Carrot.model.User;
@@ -124,12 +125,17 @@ public class BankDataController {
                             pn.setUser(utente);
                             pn.setBankTransactionId(tx.getTransactionId());
                             pn.setNome(tx.getRemittanceInformationUnstructured());
-                            pn.setImporto(new BigDecimal(tx.getTransactionAmount().getAmount()));
-
+                            
+                            BigDecimal importo = new BigDecimal(tx.getTransactionAmount().getAmount());
+                            pn.setImporto(importo);
+                            
+                            // Imposta il tipo di movimento
+                            pn.setTipoMovimento(importo.compareTo(BigDecimal.ZERO) < 0 ? TipoMovimento.USCITA : TipoMovimento.ENTRATA);
+                        
                             if (tx.getBookingDate() != null) {
                                 pn.setDataOperazione(LocalDate.parse(tx.getBookingDate()));
                             }
-
+                        
                             primaNotaRepository.save(pn);
                         }
                     });
