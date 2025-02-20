@@ -117,6 +117,17 @@ public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
     if (accountIds != null) {
         for (String accountId : accountIds) {
             try {
+                var accountDetails = bankDataService.getAccountDetails(accountId);
+                Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
+                if (!existing.isEmpty()) {
+                    BankAccountsUser bankAccount = existing.get();
+                    bankAccount.setIban(accountDetails.getAccount().getIban());
+                    bankAccount.setOwnerName(accountDetails.getAccount().getOwnerName());
+                    bankAccount.setCurrency(accountDetails.getAccount().getCurrency());
+                    bankAccount.setAccountName(accountDetails.getAccount().getProduct());
+                    bankAccountRepository.save(bankAccount);
+                }
+    
                 var txResp = bankDataService.getTransactions(accountId);
                 var booked = txResp.getTransactions().getBooked();  // movimenti contabilizzati
                 if (booked != null) {

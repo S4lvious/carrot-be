@@ -130,6 +130,27 @@ public class GoCardlessBankDataService {
         return response.getBody();
     }
 
+
+    public AccountDetailsResponse getAccountDetails(String accountId) {
+        String endpoint = baseUrl + "/accounts/" + accountId + "/details/";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authService.getAccessToken());
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<AccountDetailsResponse> response = restTemplate.exchange(
+            endpoint, HttpMethod.GET, requestEntity, AccountDetailsResponse.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Errore nel recupero dettagli account");
+        }
+        return response.getBody();
+
+    }
+
     /**
      * 5) Ottenere le transazioni di un account
      */
