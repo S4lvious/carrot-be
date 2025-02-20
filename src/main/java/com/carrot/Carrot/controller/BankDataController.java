@@ -89,7 +89,7 @@ public class BankDataController {
     }
 
     @GetMapping("/redirect")
-    public ResponseEntity<String> handleRedirect(@RequestParam("ref") String requisitionId) {
+    public ResponseEntity<String> handleRedirect(@RequestParam("id") String requisitionId) {
 
         // 1) Recupero l'utente in base a requisitionId
         User utente = utenteRepository.findByRequisitionId(requisitionId)
