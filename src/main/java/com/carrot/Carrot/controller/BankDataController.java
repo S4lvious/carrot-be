@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -89,39 +90,37 @@ public class BankDataController {
         return resp;
     }
 
-    @GetMapping("/redirect")
-    public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
+@GetMapping("/redirect")
+public ResponseEntity<String> handleRedirect(@RequestParam("ref") String ref) {
 
-        // 1) Recupero l'utente in base a requisitionId
-        User utente = utenteRepository.findByGoCardlessRef(ref)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato per requisitionId=" + ref));
+    // 1) Recupero l'utente in base a goCardlessRef
+    User utente = utenteRepository.findByGoCardlessRef(ref)
+            .orElseThrow(() -> new RuntimeException("Utente non trovato per requisitionId=" + ref));
 
-        // 2) Chiamo GoCardless per sapere i conti associati
-        RequisitionDetails details = bankDataService.getRequisitionDetails(utente.getRequisitionId());
-        List<String> accountIds = details.getAccounts();
+    // 2) Chiamo GoCardless per sapere i conti associati
+    RequisitionDetails details = bankDataService.getRequisitionDetails(utente.getRequisitionId());
+    List<String> accountIds = details.getAccounts();
 
-        // 3) Per ogni accountId, salvo o aggiorno nella tabella 'utente_bank_account'
-        if (accountIds != null && !accountIds.isEmpty()) {
-            for (String accountId : accountIds) {
-                Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
-                if (existing.isEmpty()) {
-                    BankAccountsUser uba = new BankAccountsUser();
-                    uba.setUtente(utente);
-                    uba.setBankAccountId(accountId);
-                    bankAccountRepository.save(uba);
-                }
+    // 3) Per ogni accountId, salvo o aggiorno nella tabella 'utente_bank_account'
+    if (accountIds != null && !accountIds.isEmpty()) {
+        for (String accountId : accountIds) {
+            Optional<BankAccountsUser> existing = bankAccountRepository.findByBankAccountId(accountId);
+            if (existing.isEmpty()) {
+                BankAccountsUser uba = new BankAccountsUser();
+                uba.setUtente(utente);
+                uba.setBankAccountId(accountId);
+                bankAccountRepository.save(uba);
             }
         }
+    }
 
-        // 4) Recupero le transazioni per ciascun accountId e le salvo in PrimaNota
-        if (accountIds != null) {
-            for (String accountId : accountIds) {
+    if (accountIds != null) {
+        for (String accountId : accountIds) {
+            try {
                 var txResp = bankDataService.getTransactions(accountId);
-
                 var booked = txResp.getTransactions().getBooked();  // movimenti contabilizzati
                 if (booked != null) {
                     booked.forEach(tx -> {
-                        // Evita duplicati
                         if (!primaNotaRepository.existsByBankTransactionId(tx.getTransactionId())) {
                             PrimaNota pn = new PrimaNota();
                             pn.setUser(utente);
@@ -142,11 +141,18 @@ public class BankDataController {
                         }
                     });
                 }
+            } catch (HttpClientErrorException.Forbidden ex) {
+                // Se per questo account otteniamo 403 Forbidden, lo logghiamo e continuiamo con il prossimo account
+                System.err.println("Accesso negato per l'account " + accountId + ": " + ex.getMessage());
             }
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-        .location(URI.create("https://app.powerwebsoftware.it/contabilita"))
-        .build();
     }
+
+    return ResponseEntity.status(HttpStatus.FOUND)
+            .location(URI.create("https://app.powerwebsoftware.it/contabilita"))
+            .build();
+}
+
+
 }
 
