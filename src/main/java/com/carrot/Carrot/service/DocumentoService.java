@@ -5,6 +5,8 @@ import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.DocumentoRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 import com.google.cloud.storage.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ public class DocumentoService {
     private final DocumentoRepository documentoRepository;
     private final Storage storage;
     private final String bucketName;
+    @Autowired
+    StorageService storageService;
 
         private User getCurrentUser() {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder
@@ -46,14 +50,6 @@ public class DocumentoService {
     }
 
     public String getSignedUrl(String filePath) {
-        BlobId blobId = BlobId.of(bucketName, filePath);
-        Blob blob = storage.get(blobId);
-        
-        if (blob == null) {
-            throw new RuntimeException("File non trovato su Google Cloud Storage");
-        }
-
-        URL signedUrl = blob.signUrl(1, TimeUnit.HOURS); // URL valido per 1 ora
-        return signedUrl.toString();
+        return this.storageService.generateSignedUrl(filePath).toString();
     }
 }
