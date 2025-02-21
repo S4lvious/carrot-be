@@ -48,20 +48,34 @@ public class OrdineController {
     // Crea un nuovo ordine
     @PostMapping
     public ResponseEntity<Ordine> addOrdine(
-            @RequestPart("ordineData") String ordineJson, // ✅ Riceviamo l'ordine come JSON in una stringa
+            @RequestPart("ordineData") String ordineJson,  
             @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
+    
+        // ✅ Log per controllare cosa arriva
+        System.out.println("Ricevuto JSON: " + ordineJson);
+        if (documenti != null) {
+            System.out.println("Numero documenti ricevuti: " + documenti.size());
+        } else {
+            System.out.println("Nessun documento ricevuto");
+        }
+    
+        // ✅ Proviamo a deserializzare l'ordine
         ObjectMapper objectMapper = new ObjectMapper();
         Ordine ordine;
         try {
             ordine = objectMapper.readValue(ordineJson, Ordine.class);
         } catch (JsonProcessingException e) {
+            System.err.println("Errore nella deserializzazione dell'ordine: " + e.getMessage());
             return ResponseEntity.badRequest().body(null);
         }
-
-        // ✅ Ora possiamo passare l'ordine e i documenti al service
+    
+        // ✅ Controllo se l'oggetto Ordine è stato deserializzato correttamente
+        System.out.println("Ordine Deserializzato: " + ordine.toString());
+    
         Optional<Ordine> savedOrdine = ordineService.addOrdine(ordine, documenti);
         return savedOrdine.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
     }
+    
     
     @GetMapping("/unfattured")
     public ResponseEntity<List<Ordine>> findNonFatturati() {
