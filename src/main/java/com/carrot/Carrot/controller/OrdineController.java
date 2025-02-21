@@ -32,7 +32,7 @@ public class OrdineController {
 
     // Crea un nuovo ordine
     @PostMapping
-    public ResponseEntity<Ordine> addOrdine(@RequestBody Ordine ordine, List<MultipartFile> documenti) {
+    public ResponseEntity<Ordine> addOrdine(@RequestBody Ordine ordine,  @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
        return ordineService.addOrdine(ordine, documenti).map(newOrdine -> ResponseEntity.ok(newOrdine)).orElse(ResponseEntity.badRequest().build());
     }
 
