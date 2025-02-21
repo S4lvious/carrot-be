@@ -1,5 +1,6 @@
 package com.carrot.Carrot.service;
 
+import com.carrot.Carrot.model.Documento;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,11 @@ public class StorageService {
 
         return fileName; // Salviamo solo il percorso nel database
     }
+
+    public void deleteFile(Documento documento) {
+        BlobId blobId = BlobId.of(bucketName, documento.getPercorso());
+        storage.delete(blobId);
+    } 
 
     // 📌 Metodo per ottenere un URL firmato per il download
     public URL generateSignedUrl(String fileName) {

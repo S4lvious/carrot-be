@@ -30,6 +30,13 @@ public class DocumentoController {
         return ResponseEntity.ok(documentoService.getDocumentiByCliente(clienteId));
     }
 
+    @DeleteMapping("/{documentoId}")
+    public ResponseEntity<?> deleteDocumento(@PathVariable Long documentoId) {
+        documentoService.deleteDocumento(documentoId);
+        return ResponseEntity.ok().body("Documento eliminato con successo!");
+    }
+
+
     // 📌 Genera un link firmato per visualizzare/scaricare un documento
     @GetMapping("/visualizza")
     public ResponseEntity<Map<String, String>> getSignedUrl(@RequestParam String filePath) {
