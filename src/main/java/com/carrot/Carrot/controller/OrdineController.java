@@ -1,7 +1,11 @@
 package com.carrot.Carrot.controller;
 
+import com.carrot.Carrot.model.Documento;
 import com.carrot.Carrot.model.Ordine;
+import com.carrot.Carrot.repository.DocumentoRepository;
 import com.carrot.Carrot.service.OrdineService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,12 +17,20 @@ import java.util.List;
 public class OrdineController {
 
     private final OrdineService ordineService;
+    @Autowired
+    DocumentoRepository documentoRepository;
 
     public OrdineController(OrdineService ordineService) {
         this.ordineService = ordineService;
     }
 
-    // Recupera tutti gli ordini
+    @GetMapping("/{id}/documenti")
+    public ResponseEntity<List<Documento>> getDocumentiByOrdine(@PathVariable Long id) {
+        List<Documento> documenti = documentoRepository.findByOrdineId(id);
+        return ResponseEntity.ok(documenti);
+    }
+
+
     @GetMapping
     public ResponseEntity<List<Ordine>> getAllOrdini() {
         return ResponseEntity.ok(ordineService.getAllOrdini());

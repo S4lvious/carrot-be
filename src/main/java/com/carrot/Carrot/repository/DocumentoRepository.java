@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, Long> {
     
-    // Recupera tutti i documenti associati a un determinato ordine
     List<Documento> findByOrdine(Ordine ordine);
+    List<Documento> findByOrdineId(Long ordineId);
 }

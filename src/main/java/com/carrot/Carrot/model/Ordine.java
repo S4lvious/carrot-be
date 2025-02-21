@@ -50,7 +50,4 @@ public class Ordine {
     @OneToMany(mappedBy = "ordine", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DettaglioOrdine> dettagliOrdine;
 
-    // 📂 Associazione con Documenti (aggiunta)
-    @OneToMany(mappedBy = "ordine", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Documento> documenti;
 }
