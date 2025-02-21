@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 import com.carrot.Carrot.enumerator.CondizioniPagamento;
 import com.carrot.Carrot.enumerator.TipoDocumento;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "fatture")
@@ -23,6 +24,7 @@ public class Fattura {
     // Associazioni
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
     
     @OneToOne

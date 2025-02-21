@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.carrot.Carrot.enumerator.CondizioniPagamento;
 import com.carrot.Carrot.enumerator.TipoDocumento;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ordini")
@@ -28,6 +29,7 @@ public class Ordine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "data_ordine", nullable = false)
