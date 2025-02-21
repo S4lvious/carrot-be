@@ -31,9 +31,8 @@ public class DocumentoController {
     }
 
     // 📌 Genera un link firmato per visualizzare/scaricare un documento
-    @GetMapping("/visualizza/{filePath}")
-    public ResponseEntity<Map<String, String>> getSignedUrl(@PathVariable String filePath) {
+    @GetMapping("/visualizza")
+    public ResponseEntity<Map<String, String>> getSignedUrl(@RequestParam String filePath) {
         String url = documentoService.getSignedUrl(filePath);
         return ResponseEntity.ok(Map.of("signedUrl", url));
-    }
-}
+    }}
