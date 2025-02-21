@@ -22,33 +22,33 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO) // Usiamo UUID per scalabilità
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
-
+    @Column(nullable = false)
     private String nome; // Nome completo se è un professionista, oppure Nome del Referente dell'azienda.
-
+    @Column(nullable = false)
     private String cognome; // Solo per professionisti
 
     private String ragioneSociale; // Se è un'azienda
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String codiceFiscale; // Obbligatorio per tutti
 
     private String partitaIva; // Solo per aziende
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String indirizzo;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String cap;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String citta;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String provincia;
 
     private String pec; // Per la fatturazione elettronica
@@ -62,14 +62,14 @@ public class User {
 
     private String iban; // Per pagamenti
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private boolean enabled = false; // False finché l'utente non verifica l'email
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private boolean trialActive = true; // Se l'utente è ancora nel periodo di prova
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Role role = Role.USER; // Ruolo dell'utente
 
     private String requisitionId;
@@ -80,7 +80,7 @@ public class User {
     @JsonManagedReference
     private Subscription subscription; // Collega la sottoscrizione dell'utente
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
