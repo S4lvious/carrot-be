@@ -32,7 +32,9 @@ public class OrdineController {
 
     // Crea un nuovo ordine
     @PostMapping
-    public ResponseEntity<Ordine> addOrdine(@RequestBody Ordine ordine,  @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
+    public ResponseEntity<Ordine> addOrdine(           
+         @ModelAttribute Ordine ordine, // ✅ Riceviamo l'ordine come form-data
+         @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
        return ordineService.addOrdine(ordine, documenti).map(newOrdine -> ResponseEntity.ok(newOrdine)).orElse(ResponseEntity.badRequest().build());
     }
 
@@ -44,10 +46,16 @@ public class OrdineController {
 
     // Aggiorna un ordine esistente
     @PutMapping("/{id}")
-    public ResponseEntity<Ordine> updateOrdine(@RequestBody Ordine ordine) {
-        return ordineService.updateOrdine(ordine).map(nullOrdine -> ResponseEntity.ok(nullOrdine)).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Ordine> updateOrdine(
+            @PathVariable Long id,
+            @ModelAttribute Ordine ordine,  // ✅ Riceviamo l'ordine come FormData
+            @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {  // ✅ Riceviamo i nuovi file
+    
+        return ordineService.updateOrdine(id, ordine, documenti)
+                .map(updatedOrdine -> ResponseEntity.ok(updatedOrdine))
+                .orElse(ResponseEntity.notFound().build());
     }
-
+    
     // Elimina un ordine
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrdine(@PathVariable Long id) {

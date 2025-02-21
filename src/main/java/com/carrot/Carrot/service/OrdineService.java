@@ -166,11 +166,11 @@ public class OrdineService {
     }
         
     @Transactional
-public Optional<Ordine> updateOrdine(Ordine ordine) {
+public Optional<Ordine> updateOrdine(Long id, Ordine ordine, List<MultipartFile> documenti) {
     Long currentUserId = getCurrentUser().getId();
     User currentUser = getCurrentUser();
 
-    Optional<Ordine> existingOrdineOpt = ordineRepository.findByIdAndUserId(ordine.getId(), currentUserId);
+    Optional<Ordine> existingOrdineOpt = ordineRepository.findByIdAndUserId(id, currentUserId);
     if (existingOrdineOpt.isEmpty()) {
         return Optional.empty();
     }
@@ -181,7 +181,6 @@ public Optional<Ordine> updateOrdine(Ordine ordine) {
     for (DettaglioOrdine oldDettaglio : existingOrdine.getDettagliOrdine()) {
         Prodotto prodotto = oldDettaglio.getProdotto();
         if (prodotto.isEsauribile()) {
-            // Riaggiungiamo la quantità prima di sostituire i dettagli
             prodotto.setQuantita(prodotto.getQuantita() + oldDettaglio.getQuantita());
             prodottoRepository.save(prodotto);
         }
@@ -210,31 +209,35 @@ public Optional<Ordine> updateOrdine(Ordine ordine) {
 
     // 4) Ricalcola il totale dell'ordine
     BigDecimal totale = existingOrdine.getDettagliOrdine().stream()
-        .map(d -> d.getPrezzoUnitario().multiply(BigDecimal.valueOf(d.getQuantita())))
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+            .map(d -> d.getPrezzoUnitario().multiply(BigDecimal.valueOf(d.getQuantita())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     existingOrdine.setTotale(totale);
 
-    // 5) Se ci sono altri campi base dell'Ordine da aggiornare (es. stato), impostali qui
+    // 5) Aggiorna i campi base dell'Ordine
     existingOrdine.setStato(ordine.getStato());
-    // existingOrdine.setNumeroOrdine(ordine.getNumeroOrdine()); // se vuoi permettere di cambiare
-    // ... Qualsiasi altro campo effettivamente rimasto in Ordine
 
-    // 6) Salva modifiche
+    // ✅ 6) Carica e aggiungi i nuovi documenti (senza eliminare quelli esistenti)
+    if (documenti != null && !documenti.isEmpty()) {
+        List<Documento> nuoviDocumenti = documenti.stream()
+                .map(file -> uploadDocumento(file, existingOrdine))
+                .collect(Collectors.toList());
+        documentoRepository.saveAll(nuoviDocumenti);
+    }
+
+    // 7) Salva modifiche all'ordine
     Ordine ordineAggiornato = ordineRepository.save(existingOrdine);
 
-    // 7) Tracciamento operazione
+    // 8) Tracciamento operazione
     Operazione operazione = new Operazione(
-        "Ordine", "Modifica",
-        "Ordine modificato: " + ordine.getId(),
-        LocalDateTime.now(),
-        currentUser
-    );
+            "Ordine", "Modifica",
+            "Ordine modificato: " + ordine.getId(),
+            LocalDateTime.now(),
+            currentUser);
     operazione.setUser(currentUser);
     operazioneRepository.save(operazione);
 
     return Optional.of(ordineAggiornato);
 }
-
 
     @Transactional
     public void deleteOrdine(Long id) {
