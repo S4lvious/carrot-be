@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "promising-cairn-450815-a4",
+  "private_key_id": "905bedbc06aa5e491530c43adf424eb58f37f453",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDF3o+4cyihjjf2\nQA7eVBQB+9GCh9sIy6PpfTiL/q5KtgAGaQkwdnhMfs2C1IDEv2QyMt6O6v+oife1\nbUjk+W2hInUvmj4cdLLCIBzkZZvw1oLFq0pWHxUb/8dWuqPftbKOR2HbBtKupYKV\n/yAQwz64f9hQYiQAK0UkT2/71z5VfZvT/J0VRwRFgeCFZslC1OfSf+HmKMkpBXu0\nCrJkAyWfwgzt5nsOUa1sj6u5WNQZU14c9aGh2hk+niHpYwEKGJtEBn4Ay/T6lz2P\nlAiMVwX+4Fo0Uhns1nmCwkUR33qf4c5xxE0Vbo/ujM+CaWiYE3/UhK1k3BcFSK37\nFcoLJl2fAgMBAAECggEAX8NVP2nMklPoVa+vAn8ip8seHNRvd5RHIivOgEKkS9hF\nrtSK8/+CPVNpVxZNs+sFLR5dhEHLteAAGLhpfRgSrNema4F06gS4tycflJJwpGDN\nLam28nNcng5uhVUTFqQzZJS7kWt977R+vOWauUIlStnk8RJuZf6LGgWwJuyHaIvl\nzFjZPIbnQweUo2n6g3iIXO+juuJuMhoM0R9B7KW9E+AeGY92n2WN5WpEy5tKakSq\nzam1plIl/SLDNmIKF0Mhl7x/8tq4BsBvvGBkjxscNBC6YwzGeHQ71OTFwdkhMiNm\n2wSbyA2AXvJx2hIT7haqi1Dpo4wlK9fDhVDPSmRjEQKBgQDxOEzVV08xtWJRWomY\nSZu7AN008wp49+7ugE2jvi6zWXwbR7D64mlZqYrSnMF9A4Tijh9reQ5NDncWPylF\nWd+McBfwTu/iV1tQ6iG69sKp6H0nMCW6nPNV8jWuuGbAIVlpCs43ceG1MhHmxh2K\nXw3yLM/qtlAM4bymLvSQgCz6PQKBgQDR/kc/EhWO6U1sDM1bOOVl6xd93+hn0djI\nrUXe2fCVpTI34wU3u/nIXZiIKMcjIHfGIeu8F2V4KETfpuPeYjrToJEC/VXgCTNy\nHrjiteICcKXACW0jj0WvYTcXuYLG1TY9eqB5x7LRTjjQ+FBW5qB3JydQeL8j4sbX\ngdcowujhCwKBgDF4y4FBu9NFERoASJH8Hr1WqweOBQrURqORmtrHSYqtAqARrwF1\naAfklr0lOyWpkBpq7ZS8KiuxmMjuQUeg7BFAeBhoCBjSs76/lhVjQH9aWDiuTj6c\nq+dnmozv8travByoA60pZRIlZ7h9z1cusYyGlkncBETwEyG+JZhxQUg9AoGBAIxy\nPMR6G+EROK7jgRVZ4FNiALw3XQDS4OKWwPxjVv0/F285buvv1QelUbb/TvC3bmQd\nm8SZAUxz4lyTCiRaHm4cHeCZ/y1v+fCBi7ZVX2uyW6kspMn7sOezZV2AvW6uezBz\nK5FHdtl2L5nT+iek5/3JOgogN/aQXd0VAgpJEegxAoGBAK0VkKo2LtZ3YSUETLcJ\nsD85NfjyKh74pvy69QM5B3ybfC5nkbpGqmyR51NQu0kqzkYoJzTsD9IHmb+PixFv\nG6VzCclQFdW8AHuHDj79P3A/ITU/SArKNzptRfKZozbvjcd1e0QmKda4f3zItvkl\n7bAdBPGlTRPNIMPwbdGS6Ine\n-----END PRIVATE KEY-----\n",
+  "client_email": "spring-gcs-service-account@promising-cairn-450815-a4.iam.gserviceaccount.com",
+  "client_id": "102112098834603250923",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/spring-gcs-service-account%40promising-cairn-450815-a4.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -3,23 +3,30 @@ package com.carrot.Carrot.service;
 import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.model.Prodotto;
 import com.carrot.Carrot.model.DettaglioOrdine;
+import com.carrot.Carrot.model.Documento;
 import com.carrot.Carrot.model.Operazione;
-import com.carrot.Carrot.model.Cliente;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.OrdineRepository;
 import com.carrot.Carrot.repository.ProdottoRepository;
 import com.carrot.Carrot.repository.ClienteRepository;
 import com.carrot.Carrot.repository.DettaglioOrdineRepository;
+import com.carrot.Carrot.repository.DocumentoRepository;
 import com.carrot.Carrot.repository.OperazioneRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.transaction.Transactional;
+
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrdineService {
@@ -29,14 +36,24 @@ public class OrdineService {
     private final DettaglioOrdineRepository dettaglioOrdineRepository;
     private final OperazioneRepository operazioneRepository;
     private final ProdottoRepository prodottoRepository;
+    private final DocumentoRepository documentoRepository;
+    private final StorageService storage;
 
-    public OrdineService(OrdineRepository ordineRepository, ClienteRepository clienteRepository,
-                         DettaglioOrdineRepository dettaglioOrdineRepository, OperazioneRepository operazioneRepository, ProdottoRepository prodottoRepository) {
+
+    public OrdineService(OrdineRepository ordineRepository,
+                         ClienteRepository clienteRepository,
+                         DettaglioOrdineRepository dettaglioOrdineRepository, 
+                         OperazioneRepository operazioneRepository, 
+                         ProdottoRepository prodottoRepository, 
+                         DocumentoRepository documentoRepository, StorageService storage
+                         ) {
         this.ordineRepository = ordineRepository;
         this.clienteRepository = clienteRepository;
         this.dettaglioOrdineRepository = dettaglioOrdineRepository;
         this.operazioneRepository = operazioneRepository;
         this.prodottoRepository = prodottoRepository;
+        this.documentoRepository = documentoRepository;
+        this.storage = storage;
     }
 
     // Metodo di supporto per ottenere l'utente autenticato
@@ -65,9 +82,8 @@ public class OrdineService {
         Long currentUserId = getCurrentUser().getId();
         return ordineRepository.findByIdAndUserId(id, currentUserId);
     }
-
     @Transactional
-    public Optional<Ordine> addOrdine(Ordine ordine) {
+    public Optional<Ordine> addOrdine(Ordine ordine, List<MultipartFile> documenti) {
         User currentUser = getCurrentUser();
         ordine.setUser(currentUser);
     
@@ -97,7 +113,6 @@ public class OrdineService {
         ordine.setNumeroOrdine(numeroOrdine);
     
         // Calcolo del totale (solo dalla somma dei dettagli)
-        // Se vuoi includere bollo o altre voci, aggiungi la logica desiderata
         BigDecimal totale = ordine.getDettagliOrdine() == null
             ? BigDecimal.ZERO
             : ordine.getDettagliOrdine().stream()
@@ -105,25 +120,24 @@ public class OrdineService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         ordine.setTotale(totale);
     
-        // Imposta eventuali nuovi campi dell'Ordine (se arrivano dal front-end/DTO)
-        // Se i campi sono già popolati in "ordine", non devi fare altro
-        // Esempio:
-        // ordine.setTipoDocumento(ordine.getTipoDocumento());
-        // ordine.setCausale(ordine.getCausale());
-        // ordine.setBolloVirtuale(ordine.getBolloVirtuale());
-        // ordine.setImportoBollo(ordine.getImportoBollo());
-        // ... e così via per i campi di cassa, pagamento, documenti di riferimento, ecc.
-        // (Se i valori sono già nel `ordine` in ingresso, non c'è nulla da sovrascrivere.)
-    
+        // ✅ 1. Salviamo l'ordine PRIMA di gestire i documenti (necessario per ottenere l'ID)
         ordineRepository.save(ordine);
     
-        // Aggiorna data ultimo ordine per il cliente
+        // ✅ 2. Carichiamo i documenti solo se presenti
+        if (documenti != null && !documenti.isEmpty()) {
+            List<Documento> documentiSalvati = documenti.stream()
+                    .map(file -> uploadDocumento(file, ordine))
+                    .collect(Collectors.toList());
+            documentoRepository.saveAll(documentiSalvati);
+        }
+    
+        // ✅ 3. Aggiorna data ultimo ordine per il cliente
         if (ordine.getCliente() != null) {
             ordine.getCliente().setDataUltimoOrdine(LocalDate.now());
             clienteRepository.save(ordine.getCliente());
         }
     
-        // Tracciamento operazione
+        // ✅ 4. Tracciamento operazione
         Operazione operazione = new Operazione(
                 "Ordine", "Aggiunta",
                 "Ordine creato: " + ordine.getId(),
@@ -134,7 +148,23 @@ public class OrdineService {
     
         return Optional.of(ordine);
     }
-    
+
+    private Documento uploadDocumento(MultipartFile file, Ordine ordine) {
+        try {
+            // ✅ Chiamiamo il metodo di StorageService per l'upload
+            String filePath = storage.uploadFile(file, ordine.getId().toString());
+
+            Documento documento = new Documento();
+            documento.setNome(file.getOriginalFilename());
+            documento.setPercorso(filePath); // Salviamo solo il percorso
+            documento.setOrdine(ordine);
+
+            return documento;
+        } catch (IOException e) {
+            throw new RuntimeException("Errore nell'upload del file: " + file.getOriginalFilename(), e);
+        }
+    }
+        
     @Transactional
 public Optional<Ordine> updateOrdine(Ordine ordine) {
     Long currentUserId = getCurrentUser().getId();

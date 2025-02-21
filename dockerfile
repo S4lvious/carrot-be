@@ -32,6 +32,8 @@ ENV gocardless_bad_secret-id=5106d36f-2fee-4c83-bbba-612043c07f24
 ENV gocardless_bad_secret-key=19f3084a9c938508951663046bac296bd84d42c15edb2033d5239f0295e412ee8221c1545d9c51eedd83a580723cdbe3232b5001d2b4d997a8a61ebfc638b44c
 ENV gocardless_bad_api-url=https://bankaccountdata.gocardless.com/api/v2
 
+ENV spring_cloud_gcp_credentials_location=classpath:gcs-service-account.json
+ENV spring_cloud_gcp_storage_bucket=carrot-document-storage
 
 # Esponi la porta dell'applicazione
 EXPOSE 8080

@@ -34,8 +34,10 @@ spec:
           value: 19f3084a9c938508951663046bac296bd84d42c15edb2033d5239f0295e412ee8221c1545d9c51eedd83a580723cdbe3232b5001d2b4d997a8a61ebfc638b44c
         - name: gocardless_bad_api-url
           value: https://bankaccountdata.gocardless.com/api/v2
-
-
+        - name: spring_cloud_gcp_credentials_location
+          value: classpath:gcs-service-account.json
+        - name: spring_cloud_gcp_storage_bucket
+          value: carrot-document-storage
         ports:
         - containerPort: 8080
         resources:

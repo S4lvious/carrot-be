@@ -4,6 +4,7 @@ import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.service.OrdineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,8 +32,8 @@ public class OrdineController {
 
     // Crea un nuovo ordine
     @PostMapping
-    public ResponseEntity<Ordine> addOrdine(@RequestBody Ordine ordine) {
-       return ordineService.addOrdine(ordine).map(newOrdine -> ResponseEntity.ok(newOrdine)).orElse(ResponseEntity.badRequest().build());
+    public ResponseEntity<Ordine> addOrdine(@RequestBody Ordine ordine, List<MultipartFile> documenti) {
+       return ordineService.addOrdine(ordine, documenti).map(newOrdine -> ResponseEntity.ok(newOrdine)).orElse(ResponseEntity.badRequest().build());
     }
 
     @GetMapping("/unfattured")
