@@ -21,4 +21,13 @@ public class Documento {
     @ManyToOne
     @JoinColumn(name = "ordine_id", nullable = false)
     private Ordine ordine;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Cliente cliente;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 }

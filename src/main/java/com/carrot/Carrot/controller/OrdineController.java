@@ -31,13 +31,6 @@ public class OrdineController {
         this.ordineService = ordineService;
     }
 
-    @GetMapping("/{id}/documenti")
-    public ResponseEntity<List<Documento>> getDocumentiByOrdine(@PathVariable Long id) {
-        List<Documento> documenti = documentoRepository.findByOrdineId(id);
-        return ResponseEntity.ok(documenti);
-    }
-
-
     @GetMapping
     public ResponseEntity<List<Ordine>> getAllOrdini() {
         return ResponseEntity.ok(ordineService.getAllOrdini());

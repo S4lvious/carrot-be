@@ -10,6 +10,12 @@ import java.util.List;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, Long> {
     
+    // Trova documenti per ordine
     List<Documento> findByOrdine(Ordine ordine);
-    List<Documento> findByOrdineId(Long ordineId);
+    
+    // Trova documenti per ordine e utente specifico
+    List<Documento> findByOrdineIdAndUserId(Long ordineId, Long userId);
+    
+    // Trova documenti per cliente e utente specifico
+    List<Documento> findByClienteIdAndUserId(Long clienteId, Long userId);
 }

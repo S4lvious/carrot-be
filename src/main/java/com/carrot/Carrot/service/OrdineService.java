@@ -155,6 +155,8 @@ public class OrdineService {
             String filePath = storage.uploadFile(file, ordine.getId().toString());
 
             Documento documento = new Documento();
+            documento.setCliente(ordine.getCliente());
+            documento.setUser(getCurrentUser());
             documento.setNome(file.getOriginalFilename());
             documento.setPercorso(filePath); // Salviamo solo il percorso
             documento.setOrdine(ordine);
