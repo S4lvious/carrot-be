@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "clienti")
 @Getter
@@ -53,6 +55,7 @@ public class Cliente {
     private LocalDate dataUltimoOrdine;
 
     @Transient
+    @JsonProperty("isAzienda")
     public boolean isAzienda() {
         return ragioneSociale != null && !ragioneSociale.trim().isEmpty();
     }

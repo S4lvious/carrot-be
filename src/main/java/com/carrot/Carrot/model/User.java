@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -88,7 +89,7 @@ public class User {
     @JsonManagedReference
     private List<BankAccountsUser> bankAccounts;
 
-
+    @JsonProperty("isAzienda")
     public boolean isAzienda() {
         return ragioneSociale != null && !ragioneSociale.trim().isEmpty();
     }
