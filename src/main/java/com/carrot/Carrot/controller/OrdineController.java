@@ -42,6 +42,25 @@ public class OrdineController {
         return ordineService.getOrdineById(id).map(nullOrdine -> ResponseEntity.ok(nullOrdine)).orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Ordine> updateOrdine(
+            @PathVariable Long id,
+            @RequestPart("ordineData") String ordineJson,  
+            @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {  // ✅ Riceviamo i nuovi file
+                Ordine ordine;
+                try {
+                    ordine = objectMapper.readValue(ordineJson, Ordine.class);
+                } catch (JsonProcessingException e) {
+                    System.err.println("Errore nella deserializzazione dell'ordine: " + e.getMessage());
+                    return ResponseEntity.badRequest().body(null);
+                }
+    
+        return ordineService.updateOrdine(id, ordine, documenti)
+                .map(updatedOrdine -> ResponseEntity.ok(updatedOrdine))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
     // Crea un nuovo ordine
     @PostMapping
     public ResponseEntity<Ordine> addOrdine(
@@ -78,16 +97,6 @@ public class OrdineController {
 
 
     // Aggiorna un ordine esistente
-    @PutMapping("/{id}")
-    public ResponseEntity<Ordine> updateOrdine(
-            @PathVariable Long id,
-            @ModelAttribute Ordine ordine,  // ✅ Riceviamo l'ordine come FormData
-            @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {  // ✅ Riceviamo i nuovi file
-    
-        return ordineService.updateOrdine(id, ordine, documenti)
-                .map(updatedOrdine -> ResponseEntity.ok(updatedOrdine))
-                .orElse(ResponseEntity.notFound().build());
-    }
     
     // Elimina un ordine
     @DeleteMapping("/{id}")
