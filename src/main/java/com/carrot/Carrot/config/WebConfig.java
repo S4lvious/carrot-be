@@ -58,6 +58,8 @@ public class WebConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule()); // Abilita la gestione delle date Java 8
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false); // Disabilita la serializzazione in array
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true); // Serializza le date in ISO
         return mapper;
     }
 
