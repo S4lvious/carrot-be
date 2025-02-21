@@ -4,6 +4,8 @@ import com.carrot.Carrot.model.Documento;
 import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.repository.DocumentoRepository;
 import com.carrot.Carrot.service.OrdineService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ordini")
@@ -44,12 +47,22 @@ public class OrdineController {
 
     // Crea un nuovo ordine
     @PostMapping
-    public ResponseEntity<Ordine> addOrdine(           
-         @ModelAttribute Ordine ordine, // ✅ Riceviamo l'ordine come form-data
-         @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
-       return ordineService.addOrdine(ordine, documenti).map(newOrdine -> ResponseEntity.ok(newOrdine)).orElse(ResponseEntity.badRequest().build());
-    }
+    public ResponseEntity<Ordine> addOrdine(
+            @RequestPart("ordineData") String ordineJson, // ✅ Riceviamo l'ordine come JSON in una stringa
+            @RequestParam(value = "documenti", required = false) List<MultipartFile> documenti) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Ordine ordine;
+        try {
+            ordine = objectMapper.readValue(ordineJson, Ordine.class);
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
 
+        // ✅ Ora possiamo passare l'ordine e i documenti al service
+        Optional<Ordine> savedOrdine = ordineService.addOrdine(ordine, documenti);
+        return savedOrdine.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+    
     @GetMapping("/unfattured")
     public ResponseEntity<List<Ordine>> findNonFatturati() {
         return ResponseEntity.ok(ordineService.getAllOrdiniNotInvoicedList());
