@@ -23,6 +23,10 @@ public class OrdineController {
     @Autowired
     DocumentoRepository documentoRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;  // ✅ Usa il bean di Spring
+
+
     public OrdineController(OrdineService ordineService) {
         this.ordineService = ordineService;
     }
@@ -58,9 +62,6 @@ public class OrdineController {
         } else {
             System.out.println("Nessun documento ricevuto");
         }
-    
-        // ✅ Proviamo a deserializzare l'ordine
-        ObjectMapper objectMapper = new ObjectMapper();
         Ordine ordine;
         try {
             ordine = objectMapper.readValue(ordineJson, Ordine.class);

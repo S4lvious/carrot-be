@@ -57,7 +57,7 @@ public class WebConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule()); // ✅ Supporto per LocalDateTime
+        mapper.registerModule(new JavaTimeModule()); // Abilita la gestione delle date Java 8
         return mapper;
     }
 
