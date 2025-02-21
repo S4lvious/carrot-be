@@ -5,10 +5,12 @@ import com.carrot.Carrot.model.PrimaNota;
 import com.carrot.Carrot.service.PrimaNotaService;
 import com.carrot.Carrot.enumerator.TipoMovimento;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,11 +79,28 @@ public class PrimaNotaController {
     }
 
     // ✅ Ottenere il totale di entrate e uscite per i grafici
-    @GetMapping("/dashboard/totali")
-    public ResponseEntity<Map<String, BigDecimal>> getTotaleEntrateUscite() {
-        return ResponseEntity.ok(primaNotaService.getTotaleEntrateUscite());
-    }
+        @GetMapping("/dashboard/totali")
+        public ResponseEntity<Map<String, BigDecimal>> getTotaleEntrateUscite(
+                @RequestParam(value = "dataInizio", required = false) 
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInizio,
+                @RequestParam(value = "dataFine", required = false) 
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFine,
+                @RequestParam(value = "rollingDays", required = false) Integer rollingDays) {
 
+            Map<String, BigDecimal> result;
+
+            if (rollingDays != null) {
+                result = primaNotaService.getTotaleEntrateUsciteRolling(rollingDays);
+            } else if (dataInizio != null && dataFine != null) {
+                result = primaNotaService.getTotaleEntrateUscite(dataInizio, dataFine);
+            } else {
+                LocalDate dataFineDefault = LocalDate.now();
+                LocalDate dataInizioDefault = dataFineDefault.minusMonths(6);
+                result = primaNotaService.getTotaleEntrateUscite(dataInizioDefault, dataFineDefault);
+            }
+            
+            return ResponseEntity.ok(result);
+        }
     // ✅ Ottenere il saldo mensile per i grafici
     @GetMapping("/dashboard/saldo")
     public ResponseEntity<List<Map<String, Object>>> getSaldoMensile(@RequestParam(defaultValue = "6") int mesi) {

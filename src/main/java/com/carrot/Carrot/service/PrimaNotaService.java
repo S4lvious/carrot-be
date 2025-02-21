@@ -87,28 +87,37 @@ public class PrimaNotaService {
     }
 
     // Ottenere il totale di entrate e uscite
-    public Map<String, BigDecimal> getTotaleEntrateUscite() {
-        List<PrimaNota> operazioni = primaNotaRepository.findByUserId(getCurrentUser().getId());
-
+    public Map<String, BigDecimal> getTotaleEntrateUscite(LocalDate dataInizio, LocalDate dataFine) {
+        List<PrimaNota> operazioni = primaNotaRepository.findByUserId(getCurrentUser().getId())
+                .stream()
+                .filter(op -> !op.getDataOperazione().isBefore(dataInizio) && !op.getDataOperazione().isAfter(dataFine))
+                .collect(Collectors.toList());
+    
         BigDecimal entrate = operazioni.stream()
                 .filter(p -> p.getTipoMovimento() == TipoMovimento.ENTRATA)
                 .map(PrimaNota::getImporto)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+    
         BigDecimal uscite = operazioni.stream()
                 .filter(p -> p.getTipoMovimento() == TipoMovimento.USCITA)
                 .map(PrimaNota::getImporto)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+    
         Map<String, BigDecimal> result = new HashMap<>();
         result.put("entrate", entrate);
         result.put("uscite", uscite);
         return result;
     }
+    
+    // Metodo helper per un periodo "rolling" negli ultimi 'giorni' giorni
+    public Map<String, BigDecimal> getTotaleEntrateUsciteRolling(int giorni) {
+        LocalDate dataFine = LocalDate.now();
+        LocalDate dataInizio = dataFine.minusDays(giorni);
+        return getTotaleEntrateUscite(dataInizio, dataFine);
+    }
 
-    // Ottenere il saldo mensile
     public List<Map<String, Object>> getSaldoMensile(int mesi) {
         List<Map<String, Object>> saldoMensile = new ArrayList<>();
         LocalDate oggi = LocalDate.now();
