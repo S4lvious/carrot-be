@@ -54,11 +54,18 @@ public class PrimaNotaService {
     // Creare una nuova operazione
     public PrimaNota createPrimaNota(PrimaNota primaNota) {
         primaNota.setUser(getCurrentUser());
-        // Se sappiamo che 'categoria' e 'fattura' potrebbero essere null, non lanciamo eccezioni
-        // ma le salviamo comunque come tali se l'utente non le ha impostate.
+        
+        // Se il tipo di movimento è USCITA e l'importo è positivo, lo converto in negativo
+        if (primaNota.getTipoMovimento() == TipoMovimento.USCITA &&
+            primaNota.getImporto() != null &&
+            primaNota.getImporto().compareTo(BigDecimal.ZERO) > 0) {
+                primaNota.setImporto(primaNota.getImporto().negate());
+        }
+        
+        // Salvataggio della prima nota
         return primaNotaRepository.save(primaNota);
     }
-
+    
     // Modificare un'operazione esistente
     public PrimaNota updatePrimaNota(Long id, PrimaNota updatedPrimaNota) {
         return primaNotaRepository.findByIdAndUserId(id, getCurrentUser().getId())
@@ -144,7 +151,7 @@ public class PrimaNotaService {
             meseData.put("mese", start.getMonth().toString());
             meseData.put("entrate", entrate);
             meseData.put("uscite", uscite);
-            meseData.put("saldo", entrate.subtract(uscite));
+            meseData.put("saldo", entrate.add(uscite));
 
             saldoMensile.add(meseData);
         }
