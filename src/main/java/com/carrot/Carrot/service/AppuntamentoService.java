@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -36,8 +36,8 @@ public class AppuntamentoService {
     }
 
     // 📌 Recupera tutti gli appuntamenti in un intervallo di date
-    public List<Appuntamento> getAppuntamentiByDate(Long userId, LocalDate start, LocalDate end) {
-        return appuntamentoRepository.findByDataBetweenAndPartecipanti_Id(start, end, userId);
+    public List<Appuntamento> getAppuntamentiByDate(Long userId, LocalDateTime start, LocalDateTime end) {
+        return appuntamentoRepository.findByDataInizioBetweenAndPartecipanti_Id(start, end, userId);
     }
 
     // 📌 Aggiungi un appuntamento
