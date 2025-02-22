@@ -32,7 +32,7 @@ public class Progetto {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "ordine_id", nullable = false)
+    @JoinColumn(name = "ordine_id", nullable = true)
     private Ordine ordine;  // 📌 Un Progetto appartiene a un Ordine
 
     @ManyToMany
