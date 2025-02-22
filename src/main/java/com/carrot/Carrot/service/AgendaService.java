@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,13 +27,13 @@ public class AgendaService {
 
     // 📌 Recupera l'agenda di un utente
     public Optional<List<Agenda>> getAgendaByUser(Long userId) {
-        List<Agenda> agenda = agendaRepository.findByUserId(userId);
+        List<Agenda> agenda = agendaRepository.findByUser_Id(userId);
         return agenda.isEmpty() ? Optional.empty() : Optional.of(agenda);
     }
 
     // 📌 Recupera tutti gli eventi di un utente in un intervallo di date
-    public List<AgendaEntry> getEntriesByDateAndUser(Long userId, LocalDate start, LocalDate end) {
-        return agendaEntryRepository.findByDataBetweenAndUser_Id(start, end, userId);
+    public List<AgendaEntry> getEntriesByDateAndUser(Long userId, LocalDateTime start, LocalDateTime end) {
+        return agendaEntryRepository.findByDataInizioBetweenAndAgenda_User_Id(start, end, userId);
     }
 
     // 📌 Aggiungi un'entry all'agenda

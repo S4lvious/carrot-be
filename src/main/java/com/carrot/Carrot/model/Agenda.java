@@ -1,8 +1,10 @@
 package com.carrot.Carrot.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,4 +36,8 @@ public class Agenda {
 
     @OneToMany(mappedBy = "agenda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AgendaEntry> entries;
+
+    @Column(nullable = false)
+    private LocalDateTime data;
+
 }

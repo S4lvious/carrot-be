@@ -41,4 +41,11 @@ public class AgendaEntry {
 
     @Column(nullable = false)
     private LocalDateTime data;
+
+    @Column(nullable = false)
+    private LocalDateTime dataInizio; // 📌 Giorno e ora di inizio
+
+    @Column(nullable = true)
+    private LocalDateTime dataFine; // 📌 Giorno e ora di fine (può essere null per i task)
+
 }
