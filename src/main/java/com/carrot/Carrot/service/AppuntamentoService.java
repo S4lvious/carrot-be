@@ -40,6 +40,10 @@ public class AppuntamentoService {
         return appuntamentoRepository.findByDataInizioBetweenAndPartecipanti_Id(start, end, userId);
     }
 
+    public List<Appuntamento> findByClienteId(Long clienteId) {
+        return appuntamentoRepository.findByCliente_Id(clienteId);
+    }
+
     // 📌 Aggiungi un appuntamento
     @Transactional
     public Appuntamento addAppuntamento(Long userId, Appuntamento appuntamento) {
