@@ -3,6 +3,7 @@ package com.carrot.Carrot.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -56,6 +57,10 @@ public class Cliente {
     private String note;
 
     private LocalDate dataUltimoOrdine;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appuntamento> appuntamenti;
+
 
     @Transient
     @JsonProperty("isAzienda")
