@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long> {
-    List<Appuntamento> findByUser_Id(Long userId);
+    List<Appuntamento> findByOrganizzatore_Id(Long userId);
     List<Appuntamento> findByClienteId(Long clienteId);
     List<Appuntamento> findByPartecipanti_Id(Long userId);
     List<Appuntamento> findByDataBetweenAndPartecipanti_Id(LocalDate start, LocalDate end, Long userId);
