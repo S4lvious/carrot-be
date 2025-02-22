@@ -34,14 +34,14 @@ public class ProgettoService {
     // 📌 Recupera i progetti di un utente
     public List<Progetto> getProgettiByUser() {
         User user = getCurrentUser();
-        return progettoRepository.findByPartecipanti_Id(user.getId());
+        return progettoRepository.findByPartecipantiId(user.getId());
     }
 
     // 📌 Aggiunge un progetto
     @Transactional
     public Progetto addProgetto(Progetto progetto) {
         User user = getCurrentUser();
-        progetto.getPartecipanti().add(user);
+        progetto.getPartecipantiId().add(user.getId());
         return progettoRepository.save(progetto);
     }
 

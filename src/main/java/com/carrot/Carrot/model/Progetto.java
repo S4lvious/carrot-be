@@ -41,7 +41,7 @@ public class Progetto {
         joinColumns = @JoinColumn(name = "progetto_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private List<User> partecipanti;
+    private List<Long> partecipantiId;
 
     @Column(nullable = false)
     private String nome;
