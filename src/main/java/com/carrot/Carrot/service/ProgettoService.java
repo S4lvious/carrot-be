@@ -7,6 +7,7 @@ import com.carrot.Carrot.repository.ProgettoRepository;
 import com.carrot.Carrot.repository.UserRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,8 @@ import java.util.Optional;
 public class ProgettoService {
 
     private final ProgettoRepository progettoRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public ProgettoService(ProgettoRepository progettoRepository, UserRepository userRepository) {
         this.progettoRepository = progettoRepository;
@@ -40,8 +43,9 @@ public class ProgettoService {
     // 📌 Aggiunge un progetto
     @Transactional
     public Progetto addProgetto(Progetto progetto) {
-        User user = getCurrentUser();
-        progetto.getPartecipanti().add(user);
+        Long userId = getCurrentUser().getId();
+        Optional<User> user = userRepository.findById(userId);
+        progetto.getPartecipanti().add(user.get());
         return progettoRepository.save(progetto);
     }
 
