@@ -2,6 +2,7 @@ package com.carrot.Carrot.service;
 
 import com.carrot.Carrot.model.Ordine;
 import com.carrot.Carrot.model.Progetto;
+import com.carrot.Carrot.model.Task;
 import com.carrot.Carrot.model.User;
 import com.carrot.Carrot.repository.ProgettoRepository;
 import com.carrot.Carrot.repository.UserRepository;
@@ -57,6 +58,19 @@ public class ProgettoService {
         progetto.setOrdine(ordine);
         return progettoRepository.save(progetto);
 
+    }
+
+    @Transactional
+    public void editProgetto(Progetto progetto) {
+        Optional<Progetto> existingProgetto = progettoRepository.findById(progetto.getId());
+        if (existingProgetto.isPresent()) {
+            Progetto realProgetto = existingProgetto.get();
+            realProgetto.setPartecipanti(progetto.getPartecipanti());;
+            realProgetto.setOrdine(progetto.getOrdine());
+            realProgetto.setDescrizione(progetto.getDescrizione());
+            realProgetto.setNome(progetto.getNome());
+            progettoRepository.save(realProgetto);
+        }
     }
 
     // 📌 Elimina un progetto

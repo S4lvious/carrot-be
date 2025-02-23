@@ -27,6 +27,12 @@ public class ProgettoController {
         return ResponseEntity.ok(progettoService.addProgetto(progetto));
     }
 
+    @PutMapping
+    public ResponseEntity<Progetto> editProgetto(@RequestBody Progetto progetto){
+        progettoService.editProgetto(progetto);
+        return ResponseEntity.noContent().build();
+    }
+
     // 📌 Associa un progetto a un ordine
     @PostMapping("/{progettoId}/associa-ordine/{ordineId}")
     public ResponseEntity<Progetto> associaProgettoAdOrdine(
