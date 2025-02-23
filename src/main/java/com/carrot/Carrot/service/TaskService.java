@@ -44,7 +44,16 @@ public class TaskService {
     }
 
     public void editTask(Task task) {
-        taskRepository.save(task);
+        Optional<Task> existingTask = taskRepository.findById(task.getId());
+        if (existingTask.isPresent()) {
+            Task realTask = existingTask.get();
+            realTask.setAssegnatoA(task.getAssegnatoA());
+            realTask.setDataScadenza(task.getDataScadenza());
+            realTask.setDescrizione(task.getDescrizione());
+            realTask.setStato(task.getStato());
+            realTask.setTitolo(task.getTitolo());
+            taskRepository.save(realTask);
+        }
     }
 
     public List<Task> getTasksByProject(Long userId) {
