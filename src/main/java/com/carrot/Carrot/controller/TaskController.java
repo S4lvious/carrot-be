@@ -1,6 +1,7 @@
 package com.carrot.Carrot.controller;
 
 import com.carrot.Carrot.model.Task;
+import com.carrot.Carrot.dto.MoveTicketDTO;
 import com.carrot.Carrot.model.Progetto;
 import com.carrot.Carrot.service.TaskService;
 import com.carrot.Carrot.service.ProgettoService;
@@ -36,9 +37,9 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}")
-    public ResponseEntity<List<Task>> updateTakProject(@PathVariable Long taskId, @RequestBody Long progettoId, @RequestBody Long oldProjectId) {
-        taskService.updateTaskProject(taskId, progettoId, oldProjectId);
-        return ResponseEntity.ok(taskService.getTasksByProject(progettoId));
+    public ResponseEntity<List<Task>> updateTakProject(@PathVariable Long taskId, @RequestBody MoveTicketDTO ticketDTO) {
+        taskService.updateTaskProject(taskId, ticketDTO.getProjectId(), ticketDTO.getOldProjectId());
+        return ResponseEntity.ok(taskService.getTasksByProject(ticketDTO.getProjectId()));
     }
 
     // 📌 Recupera i task di un progetto
