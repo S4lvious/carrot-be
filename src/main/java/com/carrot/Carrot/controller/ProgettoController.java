@@ -46,7 +46,7 @@ public class ProgettoController {
 
     // 📌 Recupera tutti i progetti di un utente
     @GetMapping
-    public ResponseEntity<List<Progetto>> getProgettiByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<Progetto>> getProgettiByUser() {
         List<Progetto> progetti = progettoService.getProgettiByUser();
         return progetti.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(progetti);
     }
