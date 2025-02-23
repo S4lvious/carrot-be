@@ -43,6 +43,10 @@ public class TaskService {
         return taskRepository.findByAssegnatoA_Id(userId);
     }
 
+    public void editTask(Task task) {
+        taskRepository.save(task);
+    }
+
     public List<Task> getTasksByProject(Long userId) {
         return taskRepository.findByProgetto_Id(userId);
     }

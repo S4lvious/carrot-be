@@ -35,6 +35,7 @@ public class TaskController {
             return ResponseEntity.notFound().build();
         }
     }
+    
 
     @PutMapping("/{taskId}")
     public ResponseEntity<List<Task>> updateTakProject(@PathVariable Long taskId, @RequestBody MoveTicketDTO ticketDTO) {
@@ -54,6 +55,12 @@ public class TaskController {
     public ResponseEntity<List<Task>> getTasksByUser(@PathVariable Long userId) {
         List<Task> tasks = taskService.getTasksByUser(userId);
         return tasks.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tasks);
+    }
+
+    @PutMapping
+    public ResponseEntity<List<Task>> editTask(@RequestBody Task task) {
+        taskService.editTask(task);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{taskId}")
