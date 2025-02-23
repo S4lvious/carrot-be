@@ -6,16 +6,20 @@ import com.carrot.Carrot.repository.TaskRepository;
 import com.carrot.Carrot.repository.UserRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    @Autowired
+    UserRepository userRepository;
 
     public TaskService(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
@@ -48,8 +52,9 @@ public class TaskService {
     // 📌 Aggiungi un task
     @Transactional
     public Task addTask(Task task, Progetto progetto) {
-        User user = getCurrentUser();
-        task.getAssegnatoA().add(user);
+        Long userId = getCurrentUser().getId();
+        Optional<User> user = userRepository.findById(userId);
+        task.getAssegnatoA().add(user.get());
         task.setProgetto(progetto);
         return taskRepository.save(task);
     }
