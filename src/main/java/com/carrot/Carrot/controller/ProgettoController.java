@@ -44,6 +44,12 @@ public class ProgettoController {
         }
     }
 
+    @DeleteMapping("/{progettoId}")
+    public ResponseEntity<List<Progetto>> deleteProject(@PathVariable Long progettoId){
+        progettoService.deleteProgetto(progettoId);
+        return ResponseEntity.ok(progettoService.getProgettiByUser());
+    }
+
     // 📌 Recupera tutti i progetti di un utente
     @GetMapping
     public ResponseEntity<List<Progetto>> getProgettiByUser() {
