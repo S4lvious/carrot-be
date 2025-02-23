@@ -55,4 +55,13 @@ public class TaskController {
         List<Task> tasks = taskService.getTasksByUser(userId);
         return tasks.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tasks);
     }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<List<Task>> deleteTask(@PathVariable Long taskId) {
+        taskService.deleteTask(taskId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }

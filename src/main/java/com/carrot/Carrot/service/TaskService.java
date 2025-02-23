@@ -52,8 +52,6 @@ public class TaskService {
         taskRepository.updateTaskProject(taskId, projectId);
     }
 
-
-
     // 📌 Recupera i task di un utente in base allo stato
     public List<Task> getTasksByStatus(Long userId, String stato) {
         return taskRepository.findByStatoAndAssegnatoA_Id(stato, userId);
