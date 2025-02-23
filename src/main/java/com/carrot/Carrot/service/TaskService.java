@@ -2,6 +2,7 @@ package com.carrot.Carrot.service;
 import com.carrot.Carrot.model.Progetto;
 import com.carrot.Carrot.model.Task;
 import com.carrot.Carrot.model.User;
+import com.carrot.Carrot.repository.ProgettoRepository;
 import com.carrot.Carrot.repository.TaskRepository;
 import com.carrot.Carrot.repository.UserRepository;
 import com.carrot.Carrot.security.MyUserDetails;
@@ -20,6 +21,9 @@ public class TaskService {
     private final TaskRepository taskRepository;
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    ProgettoRepository progettoRepository;
 
     public TaskService(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
@@ -40,6 +44,22 @@ public class TaskService {
 
     public List<Task> getTasksByProject(Long userId) {
         return taskRepository.findByProgetto_Id(userId);
+    }
+
+    public void updateTaskProject(Long taskId, Long projectId, Long oldProjectId){
+       Optional<Task> task = taskRepository.findById(taskId);
+       Optional<Progetto> Oldprogetto = progettoRepository.findById(oldProjectId);
+       Optional<Progetto> progetto = progettoRepository.findById(projectId);
+       Progetto progettoOld = Oldprogetto.get();
+       progettoOld.getTasks().remove(task.get());
+       Task taskToMove = task.get();
+       taskToMove.setProgetto(progetto.get());
+       Progetto progettoNew = progetto.get();
+       progettoNew.getTasks().add(taskToMove);
+       progettoRepository.save(progettoOld);
+       progettoRepository.save(progettoNew);
+       taskRepository.save(taskToMove); 
+
     }
 
 

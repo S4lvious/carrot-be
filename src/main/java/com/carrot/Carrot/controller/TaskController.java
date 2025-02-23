@@ -35,6 +35,12 @@ public class TaskController {
         }
     }
 
+    @PutMapping("/{taskId}")
+    public ResponseEntity<List<Task>> updateTakProject(@PathVariable Long taskId, @RequestBody Long progettoId, @RequestBody Long oldProjectId) {
+        taskService.updateTaskProject(taskId, progettoId, oldProjectId);
+        return ResponseEntity.ok(taskService.getTasksByProject(progettoId));
+    }
+
     // 📌 Recupera i task di un progetto
     @GetMapping("/progetto/{progettoId}")
     public ResponseEntity<List<Task>> getTasksByProgetto(@PathVariable Long progettoId) {
