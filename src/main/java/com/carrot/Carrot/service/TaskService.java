@@ -8,6 +8,7 @@ import com.carrot.Carrot.repository.UserRepository;
 import com.carrot.Carrot.security.MyUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ public class TaskService {
         return taskRepository.findByProgetto_Id(userId);
     }
 
+    @Transactional
     public void updateTaskProject(Long taskId, Long projectId, Long oldProjectId){
         taskRepository.updateTaskProject(taskId, projectId);
     }
