@@ -47,19 +47,7 @@ public class TaskService {
     }
 
     public void updateTaskProject(Long taskId, Long projectId, Long oldProjectId){
-       Optional<Task> task = taskRepository.findById(taskId);
-       Optional<Progetto> Oldprogetto = progettoRepository.findById(oldProjectId);
-       Optional<Progetto> progetto = progettoRepository.findById(projectId);
-       Progetto progettoOld = Oldprogetto.get();
-       progettoOld.getTasks().remove(task.get());
-       Task taskToMove = task.get();
-       taskToMove.setProgetto(progetto.get());
-       Progetto progettoNew = progetto.get();
-       progettoNew.getTasks().add(taskToMove);
-       progettoRepository.save(progettoOld);
-       progettoRepository.save(progettoNew);
-       taskRepository.save(taskToMove); 
-
+        taskRepository.updateTaskProject(taskId, projectId);
     }
 
 
